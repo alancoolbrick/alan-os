@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ALAN OS v0.3</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06060f;
+  --s1:rgba(255,255,255,.022);--s2:rgba(255,255,255,.048);--s3:rgba(255,255,255,.08);
+  --b1:rgba(255,255,255,.065);--b2:rgba(255,255,255,.13);--b3:rgba(255,255,255,.22);
+  --gold:#e8b04b;--teal:#3de8b0;--rose:#e84b6a;--blue:#4b8be8;--violet:#9b6be8;
+  --text:#ede9e4;--dim:rgba(237,233,228,.38);--mid:rgba(237,233,228,.7);
+  --stream-w:218px;--wing-w:318px;--sidebar-w:48px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column}
+
+/* ═══ TOPBAR ═══ */
+.topbar{display:flex;align-items:center;padding:0 14px;height:46px;border-bottom:1px solid var(--b1);background:rgba(6,6,15,.98);gap:10px;flex-shrink:0;z-index:200}
+.brand{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:.1em;color:var(--gold);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.brand-ver{color:var(--dim);font-weight:400;font-size:8px;letter-spacing:.2em;font-family:'IBM Plex Mono',monospace;background:var(--s2);padding:2px 6px;border-radius:3px;border:1px solid var(--b1)}
+.topbar-mid{flex:1;display:flex;justify-content:center}
+.cmd-bar{max-width:420px;width:100%;height:28px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;display:flex;align-items:center;padding:0 10px;gap:7px;cursor:pointer;transition:border-color .15s}
+.cmd-bar:hover{border-color:var(--b2)}
+.cmd-bar-text{color:var(--dim);font-size:11px;font-family:'IBM Plex Mono',monospace;flex:1}
+.cmd-hint{font-size:8px;color:rgba(237,233,228,.18);font-family:'IBM Plex Mono',monospace;background:var(--s1);padding:1px 5px;border-radius:3px;border:1px solid var(--b1)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.pills{display:flex;gap:5px}
+.pill{display:flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:8px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--b1);background:var(--s1);white-space:nowrap}
+.dot{width:4px;height:4px;border-radius:50%;animation:pulse 2s infinite}
+.green .dot{background:var(--teal)}.amber .dot{background:var(--gold)}.red .dot{background:var(--rose)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.clock{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mid);letter-spacing:.04em}
+
+/* ═══ WORKSPACE ═══ */
+.workspace{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{width:var(--sidebar-w);border-right:1px solid var(--b1);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;background:rgba(6,6,15,.92);flex-shrink:0;z-index:100}
+.nav-item{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative;color:var(--dim);border:1px solid transparent;font-size:15px}
+.nav-item:hover{background:var(--s2);color:var(--text);border-color:var(--b1)}
+.nav-item.active{background:rgba(232,176,75,.1);color:var(--gold);border-color:rgba(232,176,75,.18)}
+.nav-label{position:absolute;left:42px;background:rgba(8,8,20,.98);border:1px solid var(--b2);padding:3px 8px;border-radius:4px;font-size:9px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .1s;z-index:300}
+.nav-item:hover .nav-label{opacity:1}
+.nav-div{width:24px;height:1px;background:var(--b1);margin:6px 0}
+
+/* ═══ ACTION STREAM ═══ */
+.action-stream{width:var(--stream-w);flex-shrink:0;border-right:1px solid var(--b1);display:flex;flex-direction:column;background:rgba(6,6,15,.88);overflow:hidden}
+.stream-head{padding:10px 12px 8px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.stream-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mid)}
+.stream-meta{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:1px}
+.stream-body{flex:1;overflow-y:auto;padding:8px}
+.stream-group{margin-bottom:10px}
+.stream-group-lbl{font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-family:'IBM Plex Mono',monospace;padding:0 4px;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.stream-group-lbl::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* ACTION BLOCKS */
+.ablock{padding:8px 10px;border-radius:7px;background:var(--s1);border:1px solid var(--b1);margin-bottom:4px;cursor:pointer;transition:all .15s;position:relative}
+.ablock:hover{background:var(--s2);border-color:var(--b2);transform:translateX(1px)}
+.ablock.urgent{border-left:2px solid var(--rose)}
+.ablock.today{border-left:2px solid var(--gold)}
+.ablock.watching{border-left:2px solid var(--blue)}
+.ablock-src{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.src-badge{font-size:7px;font-family:'IBM Plex Mono',monospace;padding:1px 4px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em}
+.sb-coho{background:rgba(61,232,176,.12);color:var(--teal)}
+.sb-hammock{background:rgba(232,176,75,.12);color:var(--gold)}
+.sb-spareroom{background:rgba(75,139,232,.12);color:var(--blue)}
+.sb-finance{background:rgba(232,75,106,.12);color:var(--rose)}
+.sb-focus{background:rgba(155,107,232,.12);color:var(--violet)}
+.sb-people{background:rgba(237,233,228,.06);color:var(--dim)}
+.ablock-age{font-size:7px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-left:auto}
+.ablock-txt{font-size:11px;color:var(--mid);line-height:1.4;margin-bottom:2px}
+.ablock-detail{font-size:9px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+.ablock-actions{display:flex;gap:5px;margin-top:6px;opacity:0;transition:opacity .15s}
+.ablock:hover .ablock-actions{opacity:1}
+.ab-btn{font-size:8px;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:3px;border:1px solid var(--b2);background:var(--s2);color:var(--mid);cursor:pointer;transition:all .1s}
+.ab-btn:hover{border-color:var(--b3);color:var(--text)}
+.ab-btn.primary{border-color:rgba(232,176,75,.3);color:var(--gold)}
+
+/* ═══ NUCLEUS ═══ */
+.nucleus{flex:1;overflow:hidden;position:relative;min-width:0}
+.mode-panel{position:absolute;inset:0;padding:14px 16px;overflow-y:auto;opacity:0;transform:translateY(4px);transition:all .22s;pointer-events:none;display:flex;flex-direction:column;gap:10px}
+.mode-panel.active{opacity:1;transform:translateY(0);pointer-events:all}
+
+/* ═══ SHARED ═══ */
+.mode-header{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.mode-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.mode-sub{font-size:9px;color:var(--dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:9px;padding:11px;transition:all .15s}
+.card:hover{border-color:var(--b2);background:var(--s2)}
+.card-lbl{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-bottom:4px}
+.card-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;line-height:1}
+.card-val.gold{color:var(--gold)}.card-val.teal{color:var(--teal)}.card-val.rose{color:var(--rose)}
+.card-note{font-size:9px;color:var(--dim);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.bar{height:2px;border-radius:2px;background:var(--s2);margin-top:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .8s}
+.sec{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-family:'IBM Plex Mono',monospace;padding-bottom:6px;border-bottom:1px solid var(--b1);margin-bottom:7px}
+.sig{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;background:var(--s1);border:1px solid var(--b1);font-size:10px;cursor:pointer;transition:all .12s}
+.sig:hover{border-color:var(--b2);background:var(--s2)}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sdot.g{background:var(--teal)}.sdot.r{background:var(--rose)}.sdot.a{background:var(--gold)}.sdot.b{background:var(--blue)}
+.sig-txt{flex:1;color:var(--mid)}.sig-meta{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+
+/* ROOM GRID */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));gap:4px}
+.rc{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .12s;border:1px solid transparent;font-weight:500}
+.rc.occupied{background:rgba(61,232,176,.09);border-color:rgba(61,232,176,.16);color:var(--teal)}
+.rc.vacant{background:rgba(232,75,106,.09);border-color:rgba(232,75,106,.18);color:var(--rose)}
+.rc.arrears{background:rgba(232,176,75,.12);border-color:rgba(232,176,75,.25);color:var(--gold);animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+.rc:hover{transform:scale(1.18);z-index:5}
+
+/* TASKS */
+.task{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:6px;background:var(--s1);border:1px solid var(--b1);cursor:pointer;transition:all .12s}
+.task:hover{border-color:var(--b2);background:var(--s2)}
+.tcheck{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--b2);flex-shrink:0;margin-top:2px;transition:border-color .15s}
+.task:hover .tcheck{border-color:var(--gold)}
+.task-body{flex:1}
+.task-txt{font-size:11px;color:var(--mid);line-height:1.4}
+.task-meta{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:2px}
+.tag{display:inline-block;padding:1px 4px;border-radius:2px;font-size:7px;font-family:'IBM Plex Mono',monospace;margin-left:5px;vertical-align:middle}
+.tag.p{background:rgba(75,139,232,.14);color:var(--blue)}.tag.f{background:rgba(232,176,75,.14);color:var(--gold)}.tag.o{background:rgba(61,232,176,.14);color:var(--teal)}
+
+/* PEOPLE */
+.pcard{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--s1);border:1px solid var(--b1);cursor:pointer;transition:all .15s}
+.pcard:hover{border-color:var(--b2);background:var(--s2)}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;flex-shrink:0}
+.av-g{background:rgba(232,176,75,.12);color:var(--gold);border:1px solid rgba(232,176,75,.22)}
+.av-t{background:rgba(61,232,176,.12);color:var(--teal);border:1px solid rgba(61,232,176,.22)}
+.av-b{background:rgba(75,139,232,.12);color:var(--blue);border:1px solid rgba(75,139,232,.22)}
+.av-r{background:rgba(232,75,106,.12);color:var(--rose);border:1px solid rgba(232,75,106,.22)}
+.pname{font-size:12px;font-weight:500}.prole{font-size:9px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:1px}.paction{font-size:9px;color:var(--gold);font-family:'IBM Plex Mono',monospace;margin-top:3px}
+
+/* PROPERTY ROWS */
+.prow{display:flex;align-items:center;padding:7px 10px;border-radius:5px;background:var(--s1);border:1px solid var(--b1);cursor:pointer;transition:all .12s;gap:8px;font-size:10px}
+.prow:hover{border-color:var(--b2);background:var(--s2)}
+.prow-name{flex:1;color:var(--mid)}.prow-addr{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--dim)}.prow-occ{font-family:'IBM Plex Mono',monospace;font-size:9px}
+.occ-full{color:var(--teal)}.occ-part{color:var(--gold)}.occ-low{color:var(--rose)}
+.cobadge{font-size:6px;font-family:'IBM Plex Mono',monospace;padding:1px 4px;border-radius:2px;text-transform:uppercase;letter-spacing:.04em}
+.cb-pks{background:rgba(75,139,232,.12);color:var(--blue)}.cb-roomy{background:rgba(61,232,176,.12);color:var(--teal)}.cb-solo{background:rgba(232,176,75,.12);color:var(--gold)}.cb-al{background:rgba(237,233,228,.06);color:var(--dim)}
+
+/* FINANCE */
+.fco{padding:9px 12px;border-radius:7px;background:var(--s1);border:1px solid var(--b1)}
+.fco-row{display:flex;justify-content:space-between;align-items:baseline}
+.fco-name{font-size:11px;color:var(--mid)}.fco-val{font-family:'IBM Plex Mono',monospace;font-size:12px}.fco-sub{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:2px}
+
+/* BRAIN */
+.chip-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.chip{padding:2px 9px;border-radius:20px;font-size:8px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--b1);background:var(--s1);color:var(--dim);cursor:pointer;transition:all .12s}
+.chip:hover{border-color:var(--b2);color:var(--mid)}.chip.active{background:rgba(232,176,75,.09);border-color:rgba(232,176,75,.22);color:var(--gold)}
+
+/* ═══ CONTEXT WING ═══ */
+.wing{width:var(--wing-w);flex-shrink:0;border-left:1px solid var(--b1);display:flex;flex-direction:column;background:rgba(6,6,15,.92);overflow:hidden}
+
+/* Wing context zone */
+.wing-context{flex-shrink:0;border-bottom:1px solid var(--b1);overflow:hidden;transition:all .3s}
+.wing-ctx-head{padding:9px 12px 6px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--b1)}
+.wing-ctx-title{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;color:var(--dim);flex:1}
+.wing-ctx-mode{font-size:8px;font-family:'IBM Plex Mono',monospace;color:var(--gold);padding:1px 5px;border-radius:3px;background:rgba(232,176,75,.08);border:1px solid rgba(232,176,75,.15)}
+.wing-ctx-body{padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.ctx-card{padding:8px 10px;border-radius:7px;background:var(--s1);border:1px solid var(--b1)}
+.ctx-card-lbl{font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-bottom:3px}
+.ctx-card-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1}
+.ctx-card-note{font-size:9px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:2px}
+.ctx-row{display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:4px 0;border-bottom:1px solid var(--b1)}
+.ctx-row:last-child{border-bottom:none}
+.ctx-row-lbl{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:9px}
+.ctx-row-val{color:var(--mid);font-size:10px}
+
+/* Wing Claude zone */
+.wing-claude{flex:1;display:flex;flex-direction:column;min-height:0}
+.chat-header{padding:9px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.chat-badge{width:24px;height:24px;border-radius:6px;background:rgba(232,176,75,.1);border:1px solid rgba(232,176,75,.2);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.chat-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--gold)}
+.chat-sub{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:1px}
+.chat-status{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+.chat-status .dot{width:4px;height:4px;background:var(--teal)}
+.chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.msg{display:flex;flex-direction:column;gap:2px}
+.msg-role{font-size:7px;font-family:'IBM Plex Mono',monospace;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;padding:0 2px}
+.msg-bubble{padding:8px 10px;border-radius:7px;font-size:11px;line-height:1.55;color:var(--mid)}
+.msg.user .msg-bubble{background:rgba(232,176,75,.07);border:1px solid rgba(232,176,75,.13);color:var(--text)}
+.msg.assistant .msg-role{color:rgba(61,232,176,.55)}
+.msg.assistant .msg-bubble{background:var(--s1);border:1px solid var(--b1)}
+.typing-indicator{display:flex;gap:3px;padding:8px 10px;align-items:center}
+.typing-dot{width:4px;height:4px;border-radius:50%;background:var(--dim);animation:typing 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,80%,100%{transform:scale(1);opacity:.35}40%{transform:scale(1.3);opacity:1}}
+.chat-input-area{padding:8px;border-top:1px solid var(--b1);flex-shrink:0}
+.quick-btns{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.qbtn{padding:2px 7px;border-radius:20px;font-size:8px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--b1);background:var(--s1);color:var(--dim);cursor:pointer;transition:all .12s;white-space:nowrap}
+.qbtn:hover{border-color:var(--b2);color:var(--mid)}
+.chat-input-row{display:flex;gap:6px;align-items:flex-end}
+.chat-input{flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text);outline:none;resize:none;line-height:1.4;min-height:32px;max-height:90px;transition:border-color .15s}
+.chat-input:focus{border-color:rgba(232,176,75,.32)}
+.chat-input::placeholder{color:var(--dim)}
+.send-btn{width:28px;height:28px;border-radius:6px;background:rgba(232,176,75,.1);border:1px solid rgba(232,176,75,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;flex-shrink:0;font-size:12px;color:var(--gold)}
+.send-btn:hover{background:rgba(232,176,75,.18);border-color:rgba(232,176,75,.38)}
+.send-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ═══ PEEK OVERLAY ═══ */
+.peek{position:fixed;z-index:500;width:340px;background:rgba(10,10,22,.98);border:1px solid var(--b2);border-radius:10px;padding:14px;box-shadow:0 16px 50px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .15s;backdrop-filter:blur(8px)}
+.peek.visible{opacity:1}
+.peek-src{font-size:8px;font-family:'IBM Plex Mono',monospace;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.peek-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3}
+.peek-body{font-size:11px;color:var(--mid);line-height:1.6;margin-bottom:10px}
+.peek-actions{display:flex;gap:6px}
+.peek-btn{font-size:9px;font-family:'IBM Plex Mono',monospace;padding:4px 10px;border-radius:4px;border:1px solid var(--b2);background:var(--s2);color:var(--mid);cursor:pointer;transition:all .1s}
+.peek-btn:hover{border-color:var(--b3);color:var(--text)}
+.peek-btn.primary{border-color:rgba(232,176,75,.3);color:var(--gold);background:rgba(232,176,75,.06)}
+.peek-hint{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;margin-top:8px;text-align:center}
+
+/* ═══ CMD OVERLAY ═══ */
+.cmd-overlay{position:fixed;inset:0;background:rgba(6,6,15,.8);backdrop-filter:blur(14px);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;opacity:0;pointer-events:none;transition:opacity .15s}
+.cmd-overlay.open{opacity:1;pointer-events:all}
+.cmd-modal{width:540px;background:rgba(10,10,22,.99);border:1px solid var(--b2);border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7);transform:translateY(-8px);transition:transform .18s}
+.cmd-overlay.open .cmd-modal{transform:translateY(0)}
+.cmd-in-row{display:flex;align-items:center;padding:13px 15px;gap:8px;border-bottom:1px solid var(--b1)}
+.cmd-in{flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text)}
+.cmd-in::placeholder{color:var(--dim)}
+.cmd-tags{display:flex;gap:4px;flex-wrap:wrap;padding:7px 10px;border-bottom:1px solid var(--b1)}
+.cmd-tag{font-size:8px;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:3px;border:1px solid var(--b1);background:var(--s1);color:var(--dim);cursor:pointer;transition:all .1s}
+.cmd-tag:hover{border-color:var(--b2);color:var(--mid)}
+.cmd-tag.active{background:rgba(232,176,75,.08);border-color:rgba(232,176,75,.22);color:var(--gold)}
+.cmd-results{padding:5px;max-height:300px;overflow-y:auto}
+.cr{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;cursor:pointer;transition:background .1s}
+.cr:hover,.cr.sel{background:var(--s2)}
+.cr-ico{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;background:var(--s2)}
+.cr-txt{flex:1;font-size:11px;color:var(--mid)}.cr-cat{font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+.cmd-foot{padding:7px 13px;border-top:1px solid var(--b1);display:flex;gap:12px;font-size:8px;color:var(--dim);font-family:'IBM Plex Mono',monospace;align-items:center}
+.ck{background:var(--s2);border:1px solid var(--b1);padding:1px 4px;border-radius:3px}
+.cmd-exec-hint{margin-left:auto;color:rgba(232,176,75,.5)}
+
+/* TOOLTIP */
+.tip{position:fixed;background:rgba(10,10,22,.97);border:1px solid var(--b2);padding:3px 7px;border-radius:4px;font-size:9px;font-family:'IBM Plex Mono',monospace;pointer-events:none;opacity:0;transition:opacity .08s;z-index:600;white-space:nowrap}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:2px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">ALAN<span class="brand-ver">OS v0.3</span></div>
+  <div class="topbar-mid">
+    <div class="cmd-bar" id="openCmd">
+      <span style="color:var(--dim);font-size:10px;font-family:monospace">⌘</span>
+      <span class="cmd-bar-text">Search or /command...</span>
+      <span class="cmd-hint">⌘K</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="pills">
+      <div class="pill green"><div class="dot"></div>Coho</div>
+      <div class="pill green"><div class="dot"></div>Hammock</div>
+      <div class="pill amber"><div class="dot"></div>5 signals</div>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-item active" data-mode="property" onclick="setMode('property')">⬡<div class="nav-label">Property</div></div>
+    <div class="nav-item" data-mode="finance" onclick="setMode('finance')">◈<div class="nav-label">Finance</div></div>
+    <div class="nav-item" data-mode="focus" onclick="setMode('focus')">◎<div class="nav-label">Focus</div></div>
+    <div class="nav-item" data-mode="people" onclick="setMode('people')">✦<div class="nav-label">People</div></div>
+    <div class="nav-item" data-mode="brain" onclick="setMode('brain')">⊛<div class="nav-label">Brain</div></div>
+    <div class="nav-div"></div>
+    <div class="nav-item" onclick="document.getElementById('cmdOverlay').classList.add('open');document.getElementById('cmdInput').focus()">⌘<div class="nav-label">Command</div></div>
+  </div>
+
+  <!-- ACTION STREAM -->
+  <div class="action-stream">
+    <div class="stream-head">
+      <div class="stream-title">Action Stream</div>
+      <div class="stream-meta">5 signals · hover to preview · space to peek</div>
+    </div>
+    <div class="stream-body" id="streamBody"></div>
+  </div>
+
+  <!-- NUCLEUS -->
+  <div class="nucleus">
+
+    <!-- PROPERTY -->
+    <div class="mode-panel active" id="panel-property">
+      <div class="mode-header"><div class="mode-title">Portfolio</div><div class="mode-sub">10 properties · 32 rooms · March 2026</div></div>
+      <div class="g3">
+        <div class="card"><div class="card-lbl">Rent Roll</div><div class="card-val gold">£23,100</div><div class="card-note">actual March 2026</div></div>
+        <div class="card"><div class="card-lbl">Vacancy Loss</div><div class="card-val rose">−£7,900</div><div class="card-note">8 rooms vacant<div class="bar"><div class="bar-fill" style="width:34%;background:var(--rose)"></div></div></div></div>
+        <div class="card"><div class="card-lbl">Occupancy</div><div class="card-val teal">75%</div><div class="card-note">24 of 32 rooms<div class="bar"><div class="bar-fill" style="width:75%;background:var(--teal)"></div></div></div></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="sec">Room map — all 32 rooms</div>
+          <div class="room-grid" id="roomGrid"></div>
+          <div style="display:flex;gap:9px;margin-top:7px">
+            <div style="display:flex;align-items:center;gap:4px;font-size:8px;color:var(--dim);font-family:monospace"><div style="width:6px;height:6px;border-radius:2px;background:rgba(61,232,176,.25)"></div>Occupied</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:8px;color:var(--dim);font-family:monospace"><div style="width:6px;height:6px;border-radius:2px;background:rgba(232,75,106,.25)"></div>Vacant</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:8px;color:var(--dim);font-family:monospace"><div style="width:6px;height:6px;border-radius:2px;background:rgba(232,176,75,.3)"></div>Arrears</div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">Live signals</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="sig"><div class="sdot r"></div><div class="sig-txt">42 Friarn St — 20% occupancy</div><div class="sig-meta">Decision pending</div></div>
+            <div class="sig"><div class="sdot r"></div><div class="sig-txt">44 Cranleigh Gdns — 40% occ</div><div class="sig-meta">−£2,800/mo</div></div>
+            <div class="sig"><div class="sdot a"></div><div class="sig-txt">3 SpareRoom enquiries unanswered</div><div class="sig-meta">Bridgwater</div></div>
+            <div class="sig"><div class="sdot a"></div><div class="sig-txt">Longfield Flat 4 — subsidence</div><div class="sig-meta">Deferred to sale</div></div>
+            <div class="sig"><div class="sdot g"></div><div class="sig-txt">Coho — all feeds live</div><div class="sig-meta">Synced now</div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Properties</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="prow"><div class="cobadge cb-pks">PKS</div><div class="prow-name">34 Bristol Road</div><div class="prow-addr">TA6</div><div class="prow-occ occ-full">6/6</div></div>
+          <div class="prow"><div class="cobadge cb-pks">PKS</div><div class="prow-name">111 Bristol Road</div><div class="prow-addr">TA6</div><div class="prow-occ occ-part">4/5 ⚡</div></div>
+          <div class="prow"><div class="cobadge cb-pks">PKS</div><div class="prow-name">42 Friarn Street</div><div class="prow-addr">TA6</div><div class="prow-occ occ-low">1/5 ⚠</div></div>
+          <div class="prow"><div class="cobadge cb-pks">PKS</div><div class="prow-name">Longfield House</div><div class="prow-addr">TA6</div><div class="prow-occ occ-part">3/6</div></div>
+          <div class="prow"><div class="cobadge cb-roomy">Roomy</div><div class="prow-name">63 St Mary Street</div><div class="prow-addr">BA14</div><div class="prow-occ occ-full">4/4</div></div>
+          <div class="prow"><div class="cobadge cb-roomy">Roomy</div><div class="prow-name">44 Cranleigh Gardens</div><div class="prow-addr">BA14</div><div class="prow-occ occ-low">2/5 ⚠</div></div>
+          <div class="prow"><div class="cobadge cb-solo">Solo Wave</div><div class="prow-name">88 Barclay Street</div><div class="prow-addr">TA6</div><div class="prow-occ occ-full">3/3</div></div>
+          <div class="prow"><div class="cobadge cb-al">Alan</div><div class="prow-name">60 Taunton Road</div><div class="prow-addr">TA6</div><div class="prow-occ occ-full">1/1</div></div>
+          <div class="prow"><div class="cobadge cb-al">Alan</div><div class="prow-name">14 Willow Grove</div><div class="prow-addr">BA14</div><div class="prow-occ occ-full">2/2</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="mode-panel" id="panel-finance">
+      <div class="mode-header"><div class="mode-title">Finance</div><div class="mode-sub">PKS · Roomy · Solo Wave · Personal</div></div>
+      <div class="g3">
+        <div class="card"><div class="card-lbl">Target (full occ)</div><div class="card-val gold">£31,000</div><div class="card-note">fully occupied</div></div>
+        <div class="card"><div class="card-lbl">Actual Rent Roll</div><div class="card-val teal">£23,100</div><div class="card-note">current month</div></div>
+        <div class="card"><div class="card-lbl">Vacancy Drag</div><div class="card-val rose">−£7,900</div><div class="card-note">biggest lever</div></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="sec">Company performance</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div class="fco"><div class="fco-row"><div class="fco-name">PKS Properties Ltd</div><div class="fco-val" style="color:var(--blue)">£11,200/mo</div></div><div class="bar"><div class="bar-fill" style="width:72%;background:var(--blue)"></div></div><div class="fco-sub">25% Alan · 25% Nicole · 50% Lukasz</div></div>
+            <div class="fco"><div class="fco-row"><div class="fco-name">Roomy Properties Ltd</div><div class="fco-val" style="color:var(--teal)">£6,800/mo</div></div><div class="bar"><div class="bar-fill" style="width:55%;background:var(--teal)"></div></div><div class="fco-sub">50% Alan · 50% Nicole</div></div>
+            <div class="fco"><div class="fco-row"><div class="fco-name">Solo Wave Ltd</div><div class="fco-val" style="color:var(--gold)">£3,600/mo</div></div><div class="bar"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="fco-sub">50% Alan · 50% Jacob Barnett</div></div>
+            <div class="fco"><div class="fco-row"><div class="fco-name">Personal</div><div class="fco-val" style="color:var(--mid)">£1,500/mo</div></div><div class="bar"><div class="bar-fill" style="width:100%;background:rgba(237,233,228,.35)"></div></div><div class="fco-sub">100% Alan · Taunton Rd + Willow Grove</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">Actions</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="sig"><div class="sdot r"></div><div class="sig-txt">CGT calc — Brockley Rd sold 6 Mar</div><div class="sig-meta">Kieran · Gorilla</div></div>
+            <div class="sig"><div class="sdot r"></div><div class="sig-txt">42 Friarn — sell vs re-let</div><div class="sig-meta">£130k mortgage</div></div>
+            <div class="sig"><div class="sdot a"></div><div class="sig-txt">Hinkley demand window — 18–24mo</div><div class="sig-meta">Review Q2</div></div>
+            <div class="sig"><div class="sdot g"></div><div class="sig-txt">NK&AS Ltd closed 6 Mar 2026</div><div class="sig-meta">Complete ✓</div></div>
+          </div>
+          <div class="sec" style="margin-top:10px">Systems</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="sig"><div class="sdot g"></div><div class="sig-txt">FreeAgent — Gorilla Accounting</div><div class="sig-meta">Live</div></div>
+            <div class="sig"><div class="sdot g"></div><div class="sig-txt">Hammock — landlord accounts</div><div class="sig-meta">Live</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOCUS -->
+    <div class="mode-panel" id="panel-focus">
+      <div class="mode-header"><div class="mode-title">Focus</div><div class="mode-sub">ALAN OS · Built-in GTD · Today</div></div>
+      <div class="g3">
+        <div class="card"><div class="card-lbl">Inbox</div><div class="card-val rose">18</div><div class="card-note">items to triage</div></div>
+        <div class="card"><div class="card-lbl">Next Actions</div><div class="card-val gold">7</div><div class="card-note">ready to do</div></div>
+        <div class="card"><div class="card-lbl">Waiting On</div><div class="card-val teal">4</div><div class="card-note">with others</div></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="sec">Today's focus</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">CGT calculation — Brockley Road<span class="tag f">finance</span></div><div class="task-meta">Kieran Whelan · Gorilla Accounting</div></div></div>
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">Friarn + Cranleigh decision<span class="tag p">property</span></div><div class="task-meta">£4,750/mo combined vacancy drag</div></div></div>
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">Reply to 3 SpareRoom enquiries<span class="tag p">property</span></div><div class="task-meta">Bridgwater rooms</div></div></div>
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">Populate Coolbrick Brain — People + Projects<span class="tag o">ops</span></div><div class="task-meta">Supabase · 8 entries outstanding</div></div></div>
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">ALAN OS — host and go daily<span class="tag o">ops</span></div><div class="task-meta">Vercel deploy · replace NirvanaHQ</div></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">Next actions</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">Hinkley strategy review<span class="tag p">property</span></div><div class="task-meta">Q2 trigger — demand window closing</div></div></div>
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">Coolbrick Brain — agent performance<span class="tag o">ops</span></div><div class="task-meta">April 2026 · Railway</div></div></div>
+            <div class="task"><div class="tcheck"></div><div class="task-body"><div class="task-txt">Deepen Focus mode — full GTD engine<span class="tag o">ops</span></div><div class="task-meta">Inbox triage · contexts · weekly review</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEOPLE -->
+    <div class="mode-panel" id="panel-people">
+      <div class="mode-header"><div class="mode-title">People</div><div class="mode-sub">Team · Partners · Advisors</div></div>
+      <div class="g2">
+        <div>
+          <div class="sec">Core team</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div class="pcard"><div class="avatar av-g">L</div><div><div class="pname">Lena</div><div class="prole">VA · Coho · SpareRoom · Hammock · Asana</div><div class="paction">→ 3 SpareRoom enquiries to handle</div></div></div>
+            <div class="pcard"><div class="avatar av-t">J</div><div><div class="pname">John</div><div class="prole">House Manager · Maintenance · Viewings</div><div class="paction">→ Longfield Flat 4 update needed</div></div></div>
+            <div class="pcard"><div class="avatar av-b">KW</div><div><div class="pname">Kieran Whelan</div><div class="prole">Gorilla Accounting · FreeAgent · Payroll</div><div class="paction">→ CGT calculation outstanding</div></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">Partners</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div class="pcard"><div class="avatar av-r">JB</div><div><div class="pname">Jacob Barnett</div><div class="prole">Solo Wave Ltd · 50/50</div><div class="paction">→ 88 Barclay St fully occupied ✓</div></div></div>
+            <div class="pcard"><div class="avatar av-g">N</div><div><div class="pname">Nicole</div><div class="prole">PKS (25%) · Roomy (50%) · Co-director</div><div class="paction">→ Friarn + Cranleigh loop open</div></div></div>
+            <div class="pcard"><div class="avatar av-b">LP</div><div><div class="pname">Lukasz Palmowski</div><div class="prole">PKS Properties · 50% shareholder</div><div class="paction">→ No pending actions</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAIN -->
+    <div class="mode-panel" id="panel-brain">
+      <div class="mode-header"><div class="mode-title">Brain</div><div class="mode-sub">Coolbrick Knowledge Graph · Supabase pgvector</div></div>
+      <div class="chip-row">
+        <div class="chip active" onclick="filterBrain(this,'all')">All</div>
+        <div class="chip" onclick="filterBrain(this,'areas')">Areas</div>
+        <div class="chip" onclick="filterBrain(this,'people')">People</div>
+        <div class="chip" onclick="filterBrain(this,'projects')">Projects</div>
+        <div class="chip" onclick="filterBrain(this,'systems')">Systems</div>
+        <div class="chip" onclick="filterBrain(this,'ideas')">Ideas</div>
+      </div>
+      <div style="position:relative;flex:1;min-height:300px;border:1px solid var(--b1);border-radius:9px;overflow:hidden">
+        <canvas id="brain-canvas"></canvas>
+        <div style="position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--gold)">Coolbrick Brain</div>
+            <div style="font-size:7px;color:var(--dim);font-family:monospace;margin-top:1px">Railway · Supabase pgvector · claude-sonnet</div>
+          </div>
+          <div style="display:flex;gap:14px">
+            <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold)">4</div><div style="font-size:7px;color:var(--dim);font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Areas</div></div>
+            <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold)">4</div><div style="font-size:7px;color:var(--dim);font-family:monospace;text-transform:uppercase;letter-spacing:.1em">People</div></div>
+            <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold)">3</div><div style="font-size:7px;color:var(--dim);font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Projects</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /nucleus -->
+
+  <!-- CONTEXT WING -->
+  <div class="wing">
+    <!-- Auto-populating context zone -->
+    <div class="wing-context" id="wingContext">
+      <div class="wing-ctx-head">
+        <span class="wing-ctx-title">Context</span>
+        <span class="wing-ctx-mode" id="wingModeLabel">Property</span>
+      </div>
+      <div class="wing-ctx-body" id="wingCtxBody"></div>
+    </div>
+
+    <!-- Claude zone -->
+    <div class="wing-claude">
+      <div class="chat-header">
+        <div class="chat-badge">✦</div>
+        <div>
+          <div class="chat-title">Claude</div>
+          <div class="chat-sub">Context-aware · Your portfolio · Live</div>
+        </div>
+        <div class="chat-status"><div class="dot" style="animation:pulse 2s infinite"></div>live</div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg assistant">
+          <div class="msg-role">Claude</div>
+          <div class="msg-bubble">Good morning Alan. You have 3 unanswered SpareRoom enquiries in Bridgwater, a CGT calculation outstanding with Kieran, and £4,750/mo bleeding from Friarn and Cranleigh combined. What do you want to tackle first?</div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="quick-btns">
+          <div class="qbtn" onclick="quickSend('What should I do about 42 Friarn Street?')">42 Friarn?</div>
+          <div class="qbtn" onclick="quickSend('Summarise my financial position')">Finance</div>
+          <div class="qbtn" onclick="quickSend('What are my biggest risks right now?')">Risks</div>
+          <div class="qbtn" onclick="quickSend('Draft a brief for Lena on the SpareRoom enquiries')">Brief Lena</div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Ask anything..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /workspace -->
+
+<!-- PEEK OVERLAY -->
+<div class="peek" id="peek">
+  <div class="peek-src" id="peek-src"></div>
+  <div class="peek-title" id="peek-title"></div>
+  <div class="peek-body" id="peek-body"></div>
+  <div class="peek-actions" id="peek-actions"></div>
+  <div class="peek-hint">Press Enter to focus · Esc to dismiss</div>
+</div>
+
+<!-- CMD OVERLAY -->
+<div class="cmd-overlay" id="cmdOverlay">
+  <div class="cmd-modal">
+    <div class="cmd-in-row">
+      <span style="color:var(--dim);font-family:monospace;font-size:13px">⌘</span>
+      <input class="cmd-in" id="cmdInput" placeholder="Search or type /invoice, /email, /task..." autocomplete="off">
+    </div>
+    <div class="cmd-tags">
+      <div class="cmd-tag active" onclick="filterCmd(this,'all')">All</div>
+      <div class="cmd-tag" onclick="filterCmd(this,'property')">Property</div>
+      <div class="cmd-tag" onclick="filterCmd(this,'finance')">Finance</div>
+      <div class="cmd-tag" onclick="filterCmd(this,'people')">People</div>
+      <div class="cmd-tag" onclick="filterCmd(this,'focus')">Focus</div>
+      <div class="cmd-tag" onclick="filterCmd(this,'brain')">Brain</div>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+    <div class="cmd-foot">
+      <span><span class="ck">↑↓</span> navigate</span>
+      <span><span class="ck">↵</span> open</span>
+      <span><span class="ck">Esc</span> close</span>
+      <span class="cmd-exec-hint">/ for commands</span>
+    </div>
+  </div>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+// ══ CLOCK ══
+const clockEl=document.getElementById('clock');
+setInterval(()=>{clockEl.textContent=new Date().toLocaleTimeString('en-GB')},1000);
+clockEl.textContent=new Date().toLocaleTimeString('en-GB');
+
+// ══ CONTEXT WING DATA ══
+const wingData={
+  property:{
+    label:'Property',
+    cards:[
+      {lbl:'Rent Roll',val:'£23,100',note:'vs £31,000 target',valCol:'var(--gold)'},
+      {lbl:'Vacancy Drag',val:'−£7,900',note:'8 rooms empty',valCol:'var(--rose)'},
+    ],
+    rows:[
+      {l:'Occupancy',v:'75% · 24/32 rooms'},
+      {l:'Critical',v:'Friarn 20% · Cranleigh 40%'},
+      {l:'Arrears',v:'111 Bristol Rd room 5'},
+      {l:'Coho status',v:'All feeds live ✓'},
+    ]
+  },
+  finance:{
+    label:'Finance',
+    cards:[
+      {lbl:'PKS monthly',val:'£11,200',note:'25/25/50 split',valCol:'var(--blue)'},
+      {lbl:'Solo Wave',val:'£3,600',note:'Full occupancy',valCol:'var(--teal)'},
+    ],
+    rows:[
+      {l:'CGT outstanding',v:'Brockley Rd · Kieran'},
+      {l:'FreeAgent',v:'Live via Gorilla'},
+      {l:'Hammock',v:'Live · reconciled'},
+      {l:'NK&AS Ltd',v:'Closed 6 Mar 2026 ✓'},
+    ]
+  },
+  focus:{
+    label:'Focus',
+    cards:[
+      {lbl:'Inbox',val:'18',note:'items to triage',valCol:'var(--rose)'},
+      {lbl:'Next actions',val:'7',note:'ready to do now',valCol:'var(--gold)'},
+    ],
+    rows:[
+      {l:'Top priority',v:'CGT calc · Friarn decision'},
+      {l:'Waiting on',v:'4 items with others'},
+      {l:'Lena',v:'SpareRoom x3 outstanding'},
+      {l:'Kieran',v:'CGT calc outstanding'},
+    ]
+  },
+  people:{
+    label:'People',
+    cards:[
+      {lbl:'Open actions',val:'5',note:'across team',valCol:'var(--gold)'},
+      {lbl:'Waiting on',val:'2',note:'Lena + Kieran',valCol:'var(--blue)'},
+    ],
+    rows:[
+      {l:'Lena',v:'SpareRoom enquiries ×3'},
+      {l:'John',v:'Longfield Flat 4 update'},
+      {l:'Kieran',v:'CGT calc outstanding'},
+      {l:'Jacob',v:'No pending actions ✓'},
+    ]
+  },
+  brain:{
+    label:'Brain',
+    cards:[
+      {lbl:'Total items',val:'14',note:'in Supabase',valCol:'var(--teal)'},
+      {lbl:'Pending capture',val:'8',note:'people + projects',valCol:'var(--gold)'},
+    ],
+    rows:[
+      {l:'Agent',v:'Live on Railway'},
+      {l:'Embeddings',v:'OpenAI · pgvector'},
+      {l:'WhatsApp',v:'Wispr Flow → agent'},
+      {l:'Dashboard',v:'coolbrick-brain-app.vercel.app'},
+    ]
+  }
+};
+
+function renderWing(mode){
+  const d=wingData[mode]||wingData.property;
+  document.getElementById('wingModeLabel').textContent=d.label;
+  const body=document.getElementById('wingCtxBody');
+  body.innerHTML='';
+  // Cards row
+  const g=document.createElement('div');g.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:6px';
+  d.cards.forEach(c=>{
+    const el=document.createElement('div');el.className='ctx-card';
+    el.innerHTML=`<div class="ctx-card-lbl">${c.lbl}</div><div class="ctx-card-val" style="color:${c.valCol}">${c.val}</div><div class="ctx-card-note">${c.note}</div>`;
+    g.appendChild(el);
+  });
+  body.appendChild(g);
+  // Rows
+  const tbl=document.createElement('div');tbl.className='ctx-card';
+  d.rows.forEach(r=>{
+    const row=document.createElement('div');row.className='ctx-row';
+    row.innerHTML=`<span class="ctx-row-lbl">${r.l}</span><span class="ctx-row-val">${r.v}</span>`;
+    tbl.appendChild(row);
+  });
+  body.appendChild(tbl);
+}
+
+// ══ MODE SWITCH ══
+let currentMode='property';
+function setMode(m){
+  currentMode=m;
+  document.querySelectorAll('.mode-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-mode]').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+m)?.classList.add('active');
+  document.querySelector(`[data-mode="${m}"]`)?.classList.add('active');
+  renderWing(m);
+  if(m==='brain')setTimeout(initBrain,50);
+}
+renderWing('property');
+
+// ══ ACTION STREAM ══
+const streamItems=[
+  {priority:'urgent',src:'spareroom',srcLbl:'SpareRoom',age:'2h',txt:'3 enquiries unanswered — Bridgwater rooms',detail:'Potential tenants for Friarn / Longfield',peek:{title:'3 SpareRoom Enquiries — Bridgwater',body:'Three prospective tenants have enquired about rooms in your Bridgwater portfolio. All three are unanswered. Average enquiry-to-void conversion on SpareRoom is 4 days — delay costs you occupancy.',actions:[{lbl:'Brief Lena',primary:true},{lbl:'Open SpareRoom'}]}},
+  {priority:'urgent',src:'finance',srcLbl:'Finance',age:'9d',txt:'CGT calculation outstanding — Brockley Road',detail:'Sold 6 Mar 2026 · Kieran at Gorilla Accounting',peek:{title:'CGT Calculation — Brockley Road',body:'Brockley Road sold 6 March 2026. CGT calculation not yet started with Kieran Whelan at Gorilla Accounting. UK CGT filing deadline applies — this needs to move now.',actions:[{lbl:'Email Kieran',primary:true},{lbl:'View Finance'}]}},
+  {priority:'urgent',src:'coho',srcLbl:'Coho',age:'14d',txt:'42 Friarn Street — decision required',detail:'1/5 occupied · £130k mortgage · −£2,650/mo',peek:{title:'42 Friarn Street — Sell vs Re-Let',body:'Only 1 of 5 rooms occupied. With a £130k mortgage and 80% vacancy, this property is losing approximately £2,650/mo net. Decision required: aggressive re-letting campaign, price reduction, or sell.',actions:[{lbl:'Ask Claude',primary:true},{lbl:'View Property'}]}},
+  {priority:'today',src:'coho',srcLbl:'Coho',age:'3d',txt:'44 Cranleigh Gardens — 40% occupied',detail:'2/5 rooms · −£2,100/mo vacancy drag',peek:{title:'44 Cranleigh Gardens — Occupancy',body:'Two of five rooms occupied. Combined with Friarn, these two properties account for the majority of your £7,900/mo vacancy drag. Trowbridge market may need a different approach.',actions:[{lbl:'Review Strategy',primary:true},{lbl:'View Property'}]}},
+  {priority:'today',src:'hammock',srcLbl:'Hammock',age:'1d',txt:'Longfield Flat 4 — subsidence update needed',detail:'John to report · deferred to sale',peek:{title:'Longfield Flat 4 — Subsidence',body:'Structural subsidence issue deferred pending sale decision. John needs to provide an update on current status and any short-term maintenance requirements.',actions:[{lbl:'Message John',primary:true},{lbl:'View Property'}]}},
+  {priority:'watching',src:'finance',srcLbl:'Finance',age:'',txt:'Hinkley demand window — 18–24 months',detail:'Key worker surge · portfolio opportunity',peek:{title:'Hinkley Point C — Demand Window',body:'Hinkley Point C construction entering a peak phase. Key worker demand in TA6 area is elevated for the next 18-24 months. Your Bridgwater portfolio is well positioned — but only if vacancy is resolved.',actions:[{lbl:'Strategy review',primary:true},{lbl:'View Finance'}]}},
+];
+
+const stream=document.getElementById('streamBody');
+const groups={urgent:'Urgent',today:'Today',watching:'Watching'};
+Object.keys(groups).forEach(g=>{
+  const items=streamItems.filter(i=>i.priority===g);
+  if(!items.length)return;
+  const grpDiv=document.createElement('div');grpDiv.className='stream-group';
+  grpDiv.innerHTML=`<div class="stream-group-lbl">${groups[g]}</div>`;
+  items.forEach(item=>{
+    const d=document.createElement('div');
+    d.className=`ablock ${item.priority}`;
+    d.setAttribute('data-peek',JSON.stringify(item.peek));
+    d.innerHTML=`
+      <div class="ablock-src">
+        <span class="src-badge sb-${item.src}">${item.srcLbl}</span>
+        ${item.age?`<span class="ablock-age">${item.age} ago</span>`:''}
+      </div>
+      <div class="ablock-txt">${item.txt}</div>
+      <div class="ablock-detail">${item.detail}</div>
+      <div class="ablock-actions">
+        <div class="ab-btn primary" onclick="quickSendFromBlock(event,'${item.txt}')">Ask Claude</div>
+        <div class="ab-btn">Snooze</div>
+      </div>`;
+    d.addEventListener('mouseenter',e=>showPeekHint(d));
+    d.addEventListener('mouseleave',hidePeek);
+    grpDiv.appendChild(d);
+  });
+  stream.appendChild(grpDiv);
+});
+
+// ══ PEEK ══
+let peekEl=document.getElementById('peek');
+let peekTarget=null;
+let peekTimeout=null;
+
+function showPeekHint(el){
+  peekTarget=el;
+}
+function hidePeek(){
+  peekTarget=null;
+  peekEl.classList.remove('visible');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key===' '&&peekTarget&&!e.target.matches('input,textarea')){
+    e.preventDefault();
+    const data=JSON.parse(peekTarget.getAttribute('data-peek')||'{}');
+    if(!data.title)return;
+    document.getElementById('peek-src').textContent='Preview';
+    document.getElementById('peek-title').textContent=data.title;
+    document.getElementById('peek-body').textContent=data.body;
+    const acts=document.getElementById('peek-actions');
+    acts.innerHTML='';
+    (data.actions||[]).forEach(a=>{
+      const btn=document.createElement('div');
+      btn.className=`peek-btn${a.primary?' primary':''}`;
+      btn.textContent=a.lbl;
+      if(a.primary)btn.onclick=()=>{quickSend('Tell me more about: '+data.title);peekEl.classList.remove('visible')};
+      acts.appendChild(btn);
+    });
+    // Position near stream
+    const rect=peekTarget.getBoundingClientRect();
+    peekEl.style.left=Math.min(rect.right+10, window.innerWidth-360)+'px';
+    peekEl.style.top=Math.max(60,rect.top-20)+'px';
+    peekEl.classList.add('visible');
+  }
+  if(e.key==='Escape')peekEl.classList.remove('visible');
+});
+
+function quickSendFromBlock(e,txt){
+  e.stopPropagation();
+  quickSend('What should I do about: '+txt);
+}
+
+// ══ ROOM GRID ══
+const rooms=[
+  ...Array(6).fill(0).map((_,i)=>({id:`B34-${i+1}`,s:'occupied',p:'34 Bristol Rd'})),
+  ...Array(4).fill(0).map((_,i)=>({id:`B111-${i+1}`,s:'occupied',p:'111 Bristol Rd'})),
+  {id:'B111-5',s:'arrears',p:'111 Bristol Rd'},
+  {id:'F42-1',s:'occupied',p:'42 Friarn St'},
+  ...Array(4).fill(0).map((_,i)=>({id:`F42-${i+2}`,s:'vacant',p:'42 Friarn St'})),
+  ...Array(3).fill(0).map((_,i)=>({id:`LF-${i+1}`,s:'occupied',p:'Longfield House'})),
+  ...Array(3).fill(0).map((_,i)=>({id:`LF-${i+4}`,s:'vacant',p:'Longfield House'})),
+  ...Array(4).fill(0).map((_,i)=>({id:`SM-${i+1}`,s:'occupied',p:'63 St Mary St'})),
+  ...Array(2).fill(0).map((_,i)=>({id:`CG-${i+1}`,s:'occupied',p:'44 Cranleigh Gdns'})),
+  ...Array(3).fill(0).map((_,i)=>({id:`CG-${i+3}`,s:'vacant',p:'44 Cranleigh Gdns'})),
+  ...Array(3).fill(0).map((_,i)=>({id:`BS-${i+1}`,s:'occupied',p:'88 Barclay St'})),
+  {id:'TR-1',s:'occupied',p:'60 Taunton Rd'},
+  {id:'WG-1',s:'occupied',p:'14 Willow Grove'},{id:'WG-2',s:'occupied',p:'14 Willow Grove'},
+];
+const tip=document.getElementById('tip');
+const grid=document.getElementById('roomGrid');
+rooms.forEach(r=>{
+  const c=document.createElement('div');c.className=`rc ${r.s}`;c.textContent=r.id.split('-')[1];
+  c.addEventListener('mouseenter',()=>{tip.textContent=`${r.id} · ${r.p} · ${r.s}`;tip.style.opacity='1'});
+  c.addEventListener('mousemove',e=>{tip.style.left=(e.clientX+10)+'px';tip.style.top=(e.clientY-28)+'px'});
+  c.addEventListener('mouseleave',()=>tip.style.opacity='0');
+  grid.appendChild(c);
+});
+
+// ══ COMMAND PALETTE ══
+const cmdItems=[
+  {ico:'⬡',txt:'42 Friarn Street — sell vs re-let decision',cat:'Property',m:'property',cat2:'property'},
+  {ico:'⬡',txt:'44 Cranleigh Gardens — occupancy strategy',cat:'Property',m:'property',cat2:'property'},
+  {ico:'⬡',txt:'Longfield House — Flat 4 subsidence',cat:'Property',m:'property',cat2:'property'},
+  {ico:'⬡',txt:'88 Barclay Street — fully occupied',cat:'Property',m:'property',cat2:'property'},
+  {ico:'◈',txt:'CGT Calculation — Brockley Road',cat:'Finance',m:'finance',cat2:'finance'},
+  {ico:'◈',txt:'Hinkley demand window review',cat:'Finance',m:'finance',cat2:'finance'},
+  {ico:'◈',txt:'FreeAgent — Gorilla Accounting',cat:'Finance',m:'finance',cat2:'finance'},
+  {ico:'◎',txt:'CGT calculation · today',cat:'Focus',m:'focus',cat2:'focus'},
+  {ico:'◎',txt:'ALAN OS — host and go daily',cat:'Focus',m:'focus',cat2:'focus'},
+  {ico:'◎',txt:'Brief Lena — SpareRoom enquiries',cat:'Focus',m:'focus',cat2:'focus'},
+  {ico:'✦',txt:'Lena — VA',cat:'People',m:'people',cat2:'people'},
+  {ico:'✦',txt:'Kieran Whelan — Gorilla Accounting',cat:'People',m:'people',cat2:'people'},
+  {ico:'✦',txt:'Jacob Barnett — Solo Wave',cat:'People',m:'people',cat2:'people'},
+  {ico:'✦',txt:'Nicole — PKS + Roomy co-director',cat:'People',m:'people',cat2:'people'},
+  {ico:'⊛',txt:'Coolbrick Brain — knowledge graph',cat:'Brain',m:'brain',cat2:'brain'},
+];
+const cmdCommands=[
+  {ico:'/',txt:'/task [description] — add to Focus inbox',cat:'Command',action:'task'},
+  {ico:'/',txt:'/brief [person] — draft a brief for someone',cat:'Command',action:'brief'},
+  {ico:'/',txt:'/summarise [topic] — ask Claude to summarise',cat:'Command',action:'summarise'},
+];
+let activeFilter2='all';
+function filterCmd(el,f){activeFilter2=f;document.querySelectorAll('.cmd-tag').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderCmd(document.getElementById('cmdInput').value)}
+function openCmd(){document.getElementById('cmdOverlay').classList.add('open');document.getElementById('cmdInput').value='';document.getElementById('cmdInput').focus();renderCmd('')}
+function closeCmd(){document.getElementById('cmdOverlay').classList.remove('open')}
+function renderCmd(q){
+  const c=document.getElementById('cmdResults');c.innerHTML='';
+  if(q.startsWith('/')){
+    [...cmdCommands,...cmdItems.slice(0,3)].forEach(item=>{
+      const d=document.createElement('div');d.className='cr';
+      d.innerHTML=`<div class="cr-ico" style="font-family:monospace">${item.ico}</div><div class="cr-txt">${item.txt}</div><div class="cr-cat">${item.cat}</div>`;
+      if(item.m)d.addEventListener('click',()=>{setMode(item.m);closeCmd()});
+      else d.addEventListener('click',()=>{const cmd=q.replace(/^\/\w+\s*/,'');quickSend(cmd||item.txt);closeCmd()});
+      c.appendChild(d);
+    });return;
+  }
+  const filt=cmdItems.filter(i=>(activeFilter2==='all'||i.cat2===activeFilter2)&&(!q||i.txt.toLowerCase().includes(q.toLowerCase())||i.cat.toLowerCase().includes(q.toLowerCase())));
+  filt.forEach(item=>{
+    const d=document.createElement('div');d.className='cr';
+    d.innerHTML=`<div class="cr-ico">${item.ico}</div><div class="cr-txt">${item.txt}</div><div class="cr-cat">${item.cat}</div>`;
+    d.addEventListener('click',()=>{setMode(item.m);closeCmd()});
+    c.appendChild(d);
+  });
+}
+document.getElementById('openCmd').addEventListener('click',openCmd);
+document.getElementById('cmdInput').addEventListener('input',e=>renderCmd(e.target.value));
+document.getElementById('cmdOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('cmdOverlay'))closeCmd()});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openCmd()}
+  if(e.key==='Escape'){closeCmd();peekEl.classList.remove('visible')}
+});
+
+// ══ BRAIN CANVAS ══
+let brainReady=false,activeFilter='all';
+const nodes=[
+  {id:'alan',lbl:'Alan',x:0,y:0,r:16,col:'#e8b04b',type:'self'},
+  {id:'pks',lbl:'PKS Props',x:-140,y:-50,r:12,col:'#4b8be8',type:'areas'},
+  {id:'roomy',lbl:'Roomy Props',x:-132,y:58,r:12,col:'#3de8b0',type:'areas'},
+  {id:'solo',lbl:'Solo Wave',x:-72,y:132,r:11,col:'#e8b04b',type:'areas'},
+  {id:'lf',lbl:'Longfield',x:-205,y:5,r:9,col:'#4b8be8',type:'areas'},
+  {id:'lena',lbl:'Lena',x:58,y:-132,r:10,col:'#e8b04b',type:'people'},
+  {id:'john',lbl:'John',x:132,y:-72,r:10,col:'#3de8b0',type:'people'},
+  {id:'jacob',lbl:'Jacob B.',x:150,y:62,r:10,col:'#e84b6a',type:'people'},
+  {id:'kieran',lbl:'Kieran W.',x:40,y:-170,r:9,col:'#4b8be8',type:'people'},
+  {id:'coho',lbl:'Coho',x:175,y:-10,r:9,col:'#3de8b0',type:'systems'},
+  {id:'hammock',lbl:'Hammock',x:182,y:36,r:9,col:'#3de8b0',type:'systems'},
+  {id:'freeag',lbl:'FreeAgent',x:68,y:172,r:9,col:'#4b8be8',type:'systems'},
+  {id:'brainp',lbl:'CB Brain',x:-45,y:-152,r:11,col:'#e84b6a',type:'projects'},
+  {id:'hinkley',lbl:'Hinkley',x:-118,y:-132,r:9,col:'#e84b6a',type:'projects'},
+  {id:'alanos',lbl:'ALAN OS',x:18,y:188,r:10,col:'#e8b04b',type:'projects'},
+  {id:'auto',lbl:'Automation',x:-30,y:188,r:8,col:'rgba(237,233,228,.6)',type:'ideas'},
+];
+const edges=[['alan','pks'],['alan','roomy'],['alan','solo'],['alan','lena'],['alan','john'],['alan','jacob'],['alan','coho'],['alan','freeag'],['alan','brainp'],['alan','hinkley'],['alan','alanos'],['alan','kieran'],['pks','lf'],['lena','coho'],['lena','hammock'],['john','pks'],['kieran','freeag'],['jacob','solo'],['brainp','alanos'],['roomy','alan'],['hammock','alan'],['alan','auto']];
+
+function initBrain(){
+  if(brainReady)return;brainReady=true;
+  const canvas=document.getElementById('brain-canvas');
+  const wrap=canvas.parentElement;
+  function resize(){canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight}
+  resize();new ResizeObserver(resize).observe(wrap);
+  const ctx=canvas.getContext('2d');let t=0;
+  function draw(){
+    t+=.006;const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+    ctx.clearRect(0,0,W,H);
+    const vis=nodes.filter(n=>activeFilter==='all'||n.type==='self'||n.type===activeFilter);
+    const visSet=new Set(vis.map(n=>n.id));
+    edges.forEach(([a,b])=>{
+      const na=nodes.find(n=>n.id===a),nb=nodes.find(n=>n.id===b);
+      if(!na||!nb||!visSet.has(a)||!visSet.has(b))return;
+      ctx.beginPath();ctx.moveTo(cx+na.x+Math.sin(t+na.x*.015)*4,cy+na.y+Math.cos(t+na.y*.015)*4);
+      ctx.lineTo(cx+nb.x+Math.sin(t+nb.x*.015)*4,cy+nb.y+Math.cos(t+nb.y*.015)*4);
+      ctx.strokeStyle='rgba(255,255,255,.055)';ctx.lineWidth=1;ctx.stroke();
+    });
+    vis.forEach(n=>{
+      const x=cx+n.x+Math.sin(t+n.x*.015)*4,y=cy+n.y+Math.cos(t+n.y*.015)*4;
+      ctx.beginPath();ctx.arc(x,y,n.r*2.4,0,Math.PI*2);
+      ctx.fillStyle=n.col.startsWith('#')?n.col+'18':'rgba(237,233,228,.03)';ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,n.r,0,Math.PI*2);
+      ctx.fillStyle=n.col.startsWith('#')?n.col+'25':'rgba(237,233,228,.07)';ctx.fill();
+      ctx.strokeStyle=n.col.startsWith('#')?n.col+'90':'rgba(237,233,228,.38)';ctx.lineWidth=1.5;ctx.stroke();
+      if(n.id==='alan'){const p=(Math.sin(t*2)+1)/2;ctx.beginPath();ctx.arc(x,y,n.r+5+p*5,0,Math.PI*2);ctx.strokeStyle='rgba(232,176,75,.18)';ctx.lineWidth=1;ctx.stroke()}
+      ctx.fillStyle=n.id==='alan'?'#e8b04b':'rgba(237,233,228,.62)';
+      ctx.font=n.id==='alan'?"bold 8px 'IBM Plex Mono'":"7px 'IBM Plex Mono'";
+      ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(n.lbl,x,y+n.r+3);
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+function filterBrain(el,f){activeFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+
+// ══ CLAUDE CHAT ══
+const SYSTEM=`You are Claude, the intelligence layer of ALAN OS — Alan's personal universal operating system.
+
+Alan's full context:
+PORTFOLIO: 10 HMO properties, 32 rooms. Bridgwater (TA6) and Trowbridge (BA14). Current rent roll £23,100/mo vs £31,000/mo target. Vacancy drag: £7,900/mo from 8 empty rooms.
+CRITICAL PROPERTIES: 42 Friarn Street (1/5 rooms, £130k mortgage, losing ~£2,650/mo net), 44 Cranleigh Gardens (2/5 rooms, -£2,100/mo).
+COMPANIES: PKS Properties Ltd (25% Alan, 25% Nicole, 50% Lukasz), Roomy Properties Ltd (50% Alan, 50% Nicole), Solo Wave Ltd (50% Alan, 50% Jacob Barnett), plus Alan's personal holdings (60 Taunton Rd, 14 Willow Grove).
+SOLD: Brockley Road sold 6 March 2026. CGT calculation outstanding with Kieran Whelan at Gorilla Accounting.
+TEAM: Lena (VA — handles Coho, SpareRoom, Hammock, Asana), John (House Manager — maintenance, viewings), Kieran Whelan (Gorilla Accounting — FreeAgent, payroll, tax).
+SYSTEMS: Coho (property mgmt, live), Hammock (landlord accounting, live), FreeAgent (bookkeeping), SpareRoom (room listings), Asana (team tasks).
+BRAIN: Coolbrick Brain — WhatsApp via Wispr Flow → persistent agent on Railway → Claude API + OpenAI embeddings → Supabase pgvector. Dashboard: coolbrick-brain-app.vercel.app.
+ALAN OS: This interface replaces NirvanaHQ as task/GTD system. It is Alan's daily operating environment.
+HINKLEY: Hinkley Point C nearby — 18-24 month key worker demand window. Major portfolio opportunity if vacancy resolved.
+CLOSED: NK&AS Ltd closed 6 March 2026.
+
+Be sharp, direct, commercially minded. No fluff. You know the full picture — connect dots Alan hasn't asked about when relevant. You are mission control intelligence, not a chatbot.`;
+
+let chatHistory=[];let isStreaming=false;
+
+function appendMsg(role,content,typing=false){
+  const msgs=document.getElementById('chatMsgs');
+  const div=document.createElement('div');div.className=`msg ${role}`;
+  if(typing){
+    div.id='typing-el';
+    div.innerHTML=`<div class="msg-role">${role==='user'?'You':'Claude'}</div><div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  } else {
+    div.innerHTML=`<div class="msg-role">${role==='user'?'You':'Claude'}</div><div class="msg-bubble"></div>`;
+    div.querySelector('.msg-bubble').textContent=content;
+  }
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;return div;
+}
+
+async function sendMessage(){
+  if(isStreaming)return;
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();if(!text)return;
+  input.value='';input.style.height='';
+  isStreaming=true;document.getElementById('sendBtn').disabled=true;
+  appendMsg('user',text);
+  chatHistory.push({role:'user',content:text});
+  const typingEl=appendMsg('assistant','',true);
+  try{
+    const res=await fetch('/api/claude',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:chatHistory,system:SYSTEM})
+    });
+    typingEl.remove();
+    const msgDiv=appendMsg('assistant','');
+    const bubble=msgDiv.querySelector('.msg-bubble');
+    const msgs=document.getElementById('chatMsgs');
+    let fullText='';
+    const reader=res.body.getReader();const decoder=new TextDecoder();
+    while(true){
+      const {done,value}=await reader.read();if(done)break;
+      const chunk=decoder.decode(value,{stream:true});
+      for(const line of chunk.split('\n')){
+        if(line.startsWith('data: ')){
+          const data=line.slice(6);if(data==='[DONE]')break;
+          try{const p=JSON.parse(data);if(p.type==='content_block_delta'&&p.delta?.text){fullText+=p.delta.text;bubble.textContent=fullText;msgs.scrollTop=msgs.scrollHeight}}catch(e){}
+        }
+      }
+    }
+    chatHistory.push({role:'assistant',content:fullText});
+  }catch(e){typingEl?.remove();appendMsg('assistant','Connection error.');}
+  isStreaming=false;document.getElementById('sendBtn').disabled=false;
+}
+
+function quickSend(text){document.getElementById('chatInput').value=text;sendMessage()}
+function handleChatKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
+  const ta=e.target;ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,90)+'px';
+}
+</script>
+</body>
+</html>
