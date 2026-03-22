@@ -153,6 +153,26 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .chip{padding:2px 9px;border-radius:20px;font-size:8px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--b1);background:var(--s1);color:var(--dim);cursor:pointer;transition:all .12s}
 .chip:hover{border-color:var(--b2);color:var(--mid)}.chip.active{background:rgba(232,176,75,.09);border-color:rgba(232,176,75,.22);color:var(--gold)}
 
+/* DOER TOGGLE */
+.doer-bar{display:flex;gap:4px;margin-bottom:10px}
+.doer-btn{padding:4px 12px;border-radius:20px;font-size:9px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--b1);background:var(--s1);color:var(--dim);cursor:pointer;transition:all .12s;white-space:nowrap}
+.doer-btn:hover{border-color:var(--b2);color:var(--mid)}
+.doer-btn.active{background:rgba(232,176,75,.09);border-color:rgba(232,176,75,.22);color:var(--gold)}
+.doer-count{font-size:8px;color:var(--dim);margin-left:2px}
+
+/* EXECUTION STATUS BADGES */
+.exec-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:10px;font-size:7px;font-family:'IBM Plex Mono',monospace;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.exec-pending{background:rgba(232,176,75,.12);color:var(--gold);border:1px solid rgba(232,176,75,.2)}
+.exec-claimed{background:rgba(75,139,232,.12);color:var(--blue);border:1px solid rgba(75,139,232,.2)}
+.exec-done{background:rgba(61,232,176,.12);color:var(--teal);border:1px solid rgba(61,232,176,.2)}
+.exec-dry_run_complete{background:rgba(237,233,228,.06);color:var(--dim);border:1px solid var(--b1)}
+.exec-needs_human{background:rgba(232,75,106,.12);color:var(--rose);border:1px solid rgba(232,75,106,.2)}
+
+/* BRAIN ITEMS LIST */
+.brain-items{display:flex;flex-direction:column;gap:4px;margin-top:10px;max-height:320px;overflow-y:auto}
+.brain-items::-webkit-scrollbar{width:4px}.brain-items::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.brain-item-loading{text-align:center;padding:20px;font-size:9px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+
 /* ═══ CONTEXT WING ═══ */
 .wing{width:var(--wing-w);flex-shrink:0;border-left:1px solid var(--b1);display:flex;flex-direction:column;background:rgba(6,6,15,.92);overflow:hidden}
 
@@ -426,7 +446,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <!-- BRAIN -->
     <div class="mode-panel" id="panel-brain">
       <div class="mode-header"><div class="mode-title">Brain</div><div class="mode-sub">Coolbrick Knowledge Graph · Supabase pgvector</div></div>
-      <div class="chip-row">
+      <div class="doer-bar" id="doerBar">
+        <div class="doer-btn active" data-doer="all" onclick="setDoerFilter('all')">All <span class="doer-count" id="doer-count-all"></span></div>
+        <div class="doer-btn" data-doer="human" onclick="setDoerFilter('human')">👤 Human <span class="doer-count" id="doer-count-human"></span></div>
+        <div class="doer-btn" data-doer="ai" onclick="setDoerFilter('ai')">🤖 AI <span class="doer-count" id="doer-count-ai"></span></div>
+      </div>
+      <div class="chip-row" id="brainChipRow">
         <div class="chip active" onclick="filterBrain(this,'all')">All</div>
         <div class="chip" onclick="filterBrain(this,'areas')">Areas</div>
         <div class="chip" onclick="filterBrain(this,'people')">People</div>
@@ -434,7 +459,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
         <div class="chip" onclick="filterBrain(this,'systems')">Systems</div>
         <div class="chip" onclick="filterBrain(this,'ideas')">Ideas</div>
       </div>
-      <div style="position:relative;flex:1;min-height:300px;border:1px solid var(--b1);border-radius:9px;overflow:hidden">
+      <div style="position:relative;flex:1;min-height:220px;border:1px solid var(--b1);border-radius:9px;overflow:hidden">
         <canvas id="brain-canvas"></canvas>
         <div style="position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none">
           <div>
@@ -447,6 +472,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold)">3</div><div style="font-size:7px;color:var(--dim);font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Projects</div></div>
           </div>
         </div>
+      </div>
+      <div class="sec" style="margin-top:10px">Items</div>
+      <div class="brain-items" id="brainItems">
+        <div class="brain-item-loading">Loading items from Supabase...</div>
       </div>
     </div>
 
@@ -639,7 +668,7 @@ function setMode(m){
   document.getElementById('panel-'+m)?.classList.add('active');
   document.querySelector(`[data-mode="${m}"]`)?.classList.add('active');
   renderWing(m);
-  if(m==='brain')setTimeout(initBrain,50);
+  if(m==='brain'){setTimeout(initBrain,50);if(!brainAllItems.length)fetchBrainItems();}
 }
 renderWing('property');
 
@@ -863,7 +892,70 @@ function initBrain(){
   }
   draw();
 }
-function filterBrain(el,f){activeFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+function filterBrain(el,f){activeFilter=f;document.querySelectorAll('#brainChipRow .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+
+// ══ BRAIN ITEMS (Supabase) ══
+const SB_URL='https://etpadjoejybmgezkfhdz.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0cGFkam9lanlibWdlemtmaGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MzgwNjksImV4cCI6MjA4OTAxNDA2OX0.BzzV8e6Nu2G5RdwdV55ziDsU1Pv7bbS560rZ0Oy1ArI';
+let brainAllItems=[];
+let currentDoer='all';
+
+const EXEC_BADGES={
+  pending:{cls:'exec-pending',label:'⏳ Pending'},
+  claimed:{cls:'exec-claimed',label:'🔄 Running'},
+  done:{cls:'exec-done',label:'✅ Done'},
+  dry_run_complete:{cls:'exec-dry_run_complete',label:'🧪 Dry Run'},
+  needs_human:{cls:'exec-needs_human',label:'🚨 Needs Human'}
+};
+const TYPE_TAG={task:'o',people:'p',project:'f',idea:'o',admin:'p',area:'o'};
+
+async function fetchBrainItems(){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/items?select=id,title,type,status,doer,execution_status&archived=not.eq.true&order=created_at.desc',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    brainAllItems=await r.json();
+    updateDoerCounts();
+    renderBrainItems();
+  }catch(e){
+    document.getElementById('brainItems').innerHTML='<div class="brain-item-loading" style="color:var(--rose)">Failed to load items</div>';
+  }
+}
+
+function updateDoerCounts(){
+  const filtered=brainAllItems;
+  const all=filtered.length;
+  const human=filtered.filter(i=>i.doer==='human').length;
+  const ai=filtered.filter(i=>i.doer==='ai').length;
+  document.getElementById('doer-count-all').textContent='('+all+')';
+  document.getElementById('doer-count-human').textContent='('+human+')';
+  document.getElementById('doer-count-ai').textContent='('+ai+')';
+}
+
+function setDoerFilter(d){
+  currentDoer=d;
+  document.querySelectorAll('#doerBar .doer-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#doerBar [data-doer="'+d+'"]').classList.add('active');
+  renderBrainItems();
+}
+
+function renderBrainItems(){
+  const container=document.getElementById('brainItems');
+  let items=brainAllItems;
+  if(currentDoer!=='all')items=items.filter(i=>i.doer===currentDoer);
+  if(!items.length){container.innerHTML='<div class="brain-item-loading">No items</div>';return}
+  container.innerHTML='';
+  items.forEach(item=>{
+    const showBadge=(currentDoer==='ai'||(currentDoer==='all'&&item.doer==='ai'));
+    const badge=(showBadge&&item.execution_status&&EXEC_BADGES[item.execution_status])
+      ?'<span class="exec-badge '+EXEC_BADGES[item.execution_status].cls+'">'+EXEC_BADGES[item.execution_status].label+'</span>':'';
+    const tagCls=TYPE_TAG[item.type]||'o';
+    const d=document.createElement('div');d.className='task';
+    d.innerHTML='<div class="tcheck"></div><div class="task-body"><div class="task-txt">'+item.title+badge+'<span class="tag '+tagCls+'">'+item.type+'</span></div><div class="task-meta">'+item.status+(item.doer==='ai'?' · ai doer':'')+'</div></div>';
+    container.appendChild(d);
+  });
+}
 
 // ══ CLAUDE CHAT ══
 const SYSTEM=`You are Claude, the intelligence layer of ALAN OS — Alan's personal universal operating system.
