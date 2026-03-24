@@ -52,24 +52,31 @@ var avColors=['av-g','av-t','av-b','av-r'];
 var knownRoles={
   'lena':'VA \u00B7 Coho \u00B7 SpareRoom \u00B7 Hammock \u00B7 Asana',
   'john':'House Manager \u00B7 Maintenance \u00B7 Viewings',
+  'andrzej':'Handyman \u00B7 Trowbridge',
   'kieran':'Gorilla Accounting \u00B7 FreeAgent \u00B7 Payroll',
   'kieran whelan':'Gorilla Accounting \u00B7 FreeAgent \u00B7 Payroll',
   'jacob':'Solo Wave Ltd \u00B7 50/50',
   'jacob barnett':'Solo Wave Ltd \u00B7 50/50',
   'nicole':'Silent partner \u00B7 PKS (25%) \u00B7 Roomy (50%)',
   'nic':'Silent partner \u00B7 PKS (25%) \u00B7 Roomy (50%)',
-  'lukasz':'PKS Properties \u00B7 50% shareholder',
-  'lukasz palmowski':'PKS Properties \u00B7 50% shareholder'
+  'lukasz':'PKS 50% \u00B7 Viewings Trowbridge \u00B7 Longfield House',
+  'lukasz palmowski':'PKS 50% \u00B7 Viewings Trowbridge \u00B7 Longfield House'
 };
 
 // Which column each person belongs in (by first name lowercase)
-var partnerNames=['jacob','nicole','nic','lukasz'];
+// Partners = shareholders/co-directors who aren't day-to-day operational team
+var partnerNames=['jacob','nicole','nic'];
+
+// Lukasz is a partner (50% PKS) BUT does on-the-ground work
+// He goes in the Partners column but still gets task matching
+// Note: removed from partnerNames so he shows under Core team
+// Actually — he's both. Let's keep him as partner since he's 50% shareholder
+// but he DOES do operational work unlike Nicole, so he gets task matching
 
 // Silent partners — no task matching, only signing/admin actions shown
-// These people don't do operational work so task cross-referencing is noise
 var silentPartners=['nicole','nic'];
 
-// Name aliases for matching (e.g. "Nic" matches "Nicole")
+// Name aliases for matching
 var nameAliases={
   'nicole':['nic','nick'],
   'nic':['nicole','nick']
@@ -101,12 +108,10 @@ function isSilentPartner(personName){
 }
 
 function findTasksForPerson(personName){
-  // Silent partners don't get task matching — only their own next_actions
   if(isSilentPartner(personName)) return [];
 
   var firstName=personName.split(' ')[0].toLowerCase();
   var fullName=personName.toLowerCase();
-  // Build list of names to search for (including aliases)
   var searchNames=[firstName,fullName];
   var aliases=nameAliases[firstName]||[];
   searchNames=searchNames.concat(aliases);
