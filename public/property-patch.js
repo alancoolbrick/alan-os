@@ -3,9 +3,7 @@
 (function(){
 'use strict';
 
-// COHO API config
-var COHO_URL='https://api.coho.life/v1/public';
-var COHO_KEY='bf7c7e9f-37ab-414a-9267-288fa895817c';
+var COHO_PROXY='/api/coho';
 
 // Ownership mapping (COHO doesn't track company ownership)
 // Keys: COHO property reference prefix (before the random suffix)
@@ -97,9 +95,7 @@ var allProperties=[];
 
 async function fetchPropertyData(){
   try{
-    var r=await fetch(COHO_URL+'/properties?includeRooms=true&pageSize=50',{
-      headers:{'Authorization':'Bearer '+COHO_KEY}
-    });
+    var r=await fetch(COHO_PROXY+'?path=/properties&includeRooms=true&pageSize=50');
     if(!r.ok) throw new Error('COHO HTTP '+r.status);
     var data=await r.json();
     allProperties=data.items||[];

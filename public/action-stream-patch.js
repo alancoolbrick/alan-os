@@ -3,8 +3,7 @@
 (function(){
 'use strict';
 
-var COHO_URL='https://api.coho.life/v1/public';
-var COHO_KEY='bf7c7e9f-37ab-414a-9267-288fa895817c';
+var COHO_PROXY='/api/coho';
 
 function init(){
   if(typeof SB_URL==='undefined'||typeof SB_KEY==='undefined'){
@@ -30,9 +29,7 @@ async function fetchStreamData(){
 
   try{
     // 2. COHO — open maintenance
-    var r2=await fetch(COHO_URL+'/maintenance?pageSize=100',{
-      headers:{'Authorization':'Bearer '+COHO_KEY}
-    });
+    var r2=await fetch(COHO_PROXY+'?path=/maintenance&pageSize=100');
     if(r2.ok){
       var maint=await r2.json();
       signals=signals.concat(maintenanceSignals(maint.items||[]));
@@ -41,9 +38,7 @@ async function fetchStreamData(){
 
   try{
     // 3. COHO — vacancy signals
-    var r3=await fetch(COHO_URL+'/properties?includeRooms=true&pageSize=50',{
-      headers:{'Authorization':'Bearer '+COHO_KEY}
-    });
+    var r3=await fetch(COHO_PROXY+'?path=/properties&includeRooms=true&pageSize=50');
     if(r3.ok){
       var props=await r3.json();
       signals=signals.concat(vacancySignals(props.items||[]));
