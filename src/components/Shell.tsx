@@ -5,10 +5,11 @@ import PropertyPanel from './property/PropertyPanel';
 import PeoplePanel from './people/PeoplePanel';
 import FinancePanel from './finance/FinancePanel';
 import BrainPanel from './brain/BrainPanel';
+import RoadmapPanel from './RoadmapPanel';
 import ClaudePanel from './claude/ClaudePanel';
 import CommandBar from './CommandBar';
 
-type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'claude';
+type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'roadmap' | 'claude';
 
 const NAV_ITEMS: { icon: string; label: string; mode: Mode }[] = [
   { icon: '⬡', label: 'Property', mode: 'property' },
@@ -16,6 +17,7 @@ const NAV_ITEMS: { icon: string; label: string; mode: Mode }[] = [
   { icon: '◎', label: 'Focus', mode: 'focus' },
   { icon: '✦', label: 'People', mode: 'people' },
   { icon: '⊛', label: 'Brain', mode: 'brain' },
+  { icon: '📊', label: 'Roadmap', mode: 'roadmap' },
 ];
 
 export default function Shell() {
@@ -124,6 +126,9 @@ export default function Shell() {
           <div className={`mode-panel ${activeMode === 'brain' ? 'active' : ''}`}>
             <BrainPanel />
           </div>
+          <div className={`mode-panel ${activeMode === 'roadmap' ? 'active' : ''}`}>
+            <RoadmapPanel />
+          </div>
           <div className={`mode-panel ${activeMode === 'claude' ? 'active' : ''}`}>
             <ClaudePanel />
           </div>
@@ -146,7 +151,7 @@ export default function Shell() {
                   scheduled: 'focus', someday: 'focus', projects: 'focus',
                   ideas: 'focus', admin: 'focus', areas: 'focus',
                   tags: 'focus', logbook: 'focus', trash: 'focus',
-                  roadmap: 'focus', 'ai-queue': 'focus',
+                  roadmap: 'roadmap', 'ai-queue': 'focus',
                 };
                 const mode = modeMap[key] || 'focus';
                 setActiveMode(mode);
