@@ -78,8 +78,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 /* ═══ NUCLEUS ═══ */
 .nucleus{flex:1;overflow:hidden;position:relative;min-width:0}
-.mode-panel{position:absolute;inset:0;padding:14px 16px;overflow-y:auto;opacity:0;transform:translateY(4px);transition:all .22s;pointer-events:none;display:flex;flex-direction:column;gap:10px}
+.mode-panel{position:absolute;inset:0;padding:14px 16px;overflow-y:auto;opacity:0;transform:translateY(4px);transition:all .22s;pointer-events:none}
 .mode-panel.active{opacity:1;transform:translateY(0);pointer-events:all}
+.mode-panel>*{margin-bottom:10px}
 
 /* ═══ SHARED ═══ */
 .mode-header{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
