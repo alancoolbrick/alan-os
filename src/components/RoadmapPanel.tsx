@@ -88,29 +88,32 @@ const PHASES: Phase[] = [
     ],
   },
   {
-    badge: 'active', title: 'Data Hygiene',
+    badge: 'complete', title: 'Data Hygiene',
     items: [
-      { title: 'Embeddings nearly complete', meta: '157 of 158 embedded · 1 remaining · was 20 missing on 22 Mar', status: 'done' },
+      { title: 'Embeddings nearly complete', meta: '37 of 39 active items embedded · 2 remaining · was 20 missing on 22 Mar', status: 'done' },
       { title: 'Untagged items cleaned', meta: 'Was 39 untagged (25% of corpus) · all active items now tagged · 30 Mar', status: 'done' },
-      { title: 'Inbox at 1 — maintain inbox zero habit', meta: 'Was 26 on 23 Mar · weekly 20-min triage pass', status: 'done' },
+      { title: 'Inbox at 0 — inbox zero maintained', meta: 'Was 26 on 23 Mar · weekly triage pass · currently 0', status: 'done' },
     ],
   },
   {
-    badge: 'next', title: 'Brain Intelligence',
+    badge: 'active', title: 'Brain Intelligence',
     items: [
-      { title: '/brief uses items + core_memory together', meta: 'Currently only searches items · core_memory has identity/property/contact context', status: 'planned' },
+      { title: '/brief uses items + core_memory together', meta: 'Parallel query · core_memory grouped by category · shipped 25 Mar', status: 'done' },
+      { title: 'Auto-archive done items + auto-dedup', meta: 'Watchdog self-heals: archives done-not-archived · deduplicates by title · 31 Mar', status: 'done' },
       { title: 'Cross-reference People → Areas → Projects', meta: 'Surface related context across types automatically', status: 'planned' },
-      { title: 'Classification feedback loop', meta: 'High revision_count → auto-adjust classifier prompt', status: 'planned' },
-      { title: 'Auto-execute trivial audit fixes', meta: 'Singleton cleanup · archive stale items · needs WhatsApp confirmation', status: 'planned' },
+      { title: 'Classification feedback loop', meta: 'High revision_count → auto-adjust classifier prompt · needs more override data', status: 'planned' },
     ],
   },
   {
-    badge: 'next', title: 'New Capabilities',
+    badge: 'active', title: 'New Capabilities',
     items: [
+      { title: 'YouTube auto-vectorise on /save with URL', meta: 'Detect YouTube URLs · fetch transcript · embed · shipped 30 Mar', status: 'done' },
+      { title: '/remind command', meta: 'Natural language date parsing · 15-min cron check · WhatsApp delivery · shipped 30 Mar', status: 'done' },
+      { title: '/burkeman — Sunday philosophical reflection', meta: 'Queries week activity + focus + core_memory · Sun 6pm UTC cron · shipped 31 Mar', status: 'done' },
+      { title: '/status — instant brain health snapshot', meta: 'No Claude call · item counts, inbox, embeddings, AI queue · shipped 31 Mar', status: 'done' },
+      { title: '/coho — instant COHO portfolio snapshot', meta: 'Occupancy %, voids, open maintenance via API · no Claude call · shipped 31 Mar', status: 'done' },
+      { title: '/help — command discoverability', meta: 'Lists all 10 available commands · shipped 31 Mar', status: 'done' },
       { title: 'PDF ingestion pipeline', meta: 'Extract → Claude structures to JSON → embed → store', status: 'planned' },
-      { title: 'YouTube auto-vectorise on /save with URL', meta: 'Detect YouTube URLs · youtube-transcript.io · embed', status: 'planned' },
-      { title: '/remind command', meta: 'Natural language date parsing · scheduled WhatsApp notifications', status: 'planned' },
-      { title: 'Burkeman Mode (/burkeman)', meta: 'Anti-optimisation weekly review · Sun 6pm · Opus model · spec ready', status: 'planned' },
       { title: 'Custom domain for ALAN OS', meta: 'os.coolbrick.com · Vercel custom domain setup', status: 'planned' },
     ],
   },
@@ -126,7 +129,7 @@ const PHASES: Phase[] = [
   {
     badge: 'future', title: 'Infrastructure',
     items: [
-      { title: 'Build COHO MCP server', meta: 'Wrap REST API · replace browser automation · faster + more reliable', status: 'planned' },
+      { title: 'COHO MCP server built', meta: '10 tools wrapping REST API · installable in Claude Desktop/Antigravity · shipped 30 Mar', status: 'done' },
       { title: 'Hammock API access', meta: 'No public API · Finance panel blocked until this exists', status: 'planned' },
     ],
   },
@@ -180,8 +183,8 @@ const FEATURE_GROUPS: FeatureGroup[] = [
       { name: 'Recurring tasks', description: 'Daily, weekly, monthly recurrence with auto-generated instances', status: 'live' },
       { name: 'Deferred items', description: 'Set a defer date — item hides until that date', status: 'live' },
       { name: 'AI executor', description: '6 autonomous handlers running on 60s poll loop', status: 'live' },
-      { name: 'Reminders', description: 'Get a WhatsApp nudge at a specific time for an item', status: 'planned' },
-      { name: 'Auto-archive stale items', description: 'Items untouched for 30+ days get flagged or auto-archived', status: 'idea' },
+      { name: 'Reminders', description: '/remind command with natural language parsing + 15-min cron delivery', status: 'live' },
+      { name: 'Auto-archive stale items', description: 'Watchdog auto-archives done-not-archived items + deduplicates daily', status: 'live' },
     ],
   },
   {
