@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 
 type ItemStatus = 'done' | 'active' | 'planned';
 type PhaseStatus = 'complete' | 'active' | 'next' | 'future';
+type FeatureStatus = 'live' | 'building' | 'planned' | 'idea';
 
 interface RoadmapItem { title: string; meta: string; status: ItemStatus }
 interface Phase { badge: PhaseStatus; title: string; items: RoadmapItem[] }
+interface Feature { name: string; description: string; status: FeatureStatus }
+interface FeatureGroup { title: string; features: Feature[] }
 interface Stats { brainItems: number; embedded: number; aiTasks: number; liveApps: number }
 
+/* ═══ TAB: Delivery Phases (Hub-style) ═══ */
 const PHASES: Phase[] = [
   {
     badge: 'complete', title: 'Foundation',
@@ -128,14 +132,103 @@ const PHASES: Phase[] = [
   },
 ];
 
-const BADGE_STYLES: Record<PhaseStatus, { bg: string; color: string; label: string }> = {
+/* ═══ TAB: Product Features (Brain Dashboard style) ═══ */
+const FEATURE_GROUPS: FeatureGroup[] = [
+  {
+    title: 'Capture',
+    features: [
+      { name: 'WhatsApp message capture', description: 'Send any message via WhatsApp and it lands in your inbox automatically', status: 'live' },
+      { name: 'AI classification', description: 'Every incoming message is classified by type with AI-suggested status', status: 'live' },
+      { name: 'AI next actions', description: '3 suggested next actions generated per item', status: 'live' },
+      { name: 'Quick add from dashboard', description: 'Type into the quick-add bar to create items directly', status: 'live' },
+      { name: '/save command', description: 'Bulk-save Claude session outputs to your brain via WhatsApp', status: 'live' },
+      { name: 'Voice note capture', description: 'Send voice notes via WhatsApp, transcribe and classify them', status: 'live' },
+      { name: 'Email capture', description: 'Forward emails to an inbox address and have them classified', status: 'planned' },
+      { name: 'Fireflies meeting capture', description: 'Auto-import action items from meeting transcripts', status: 'planned' },
+      { name: 'Photo/document capture', description: 'Send photos of documents — extract text and classify', status: 'idea' },
+    ],
+  },
+  {
+    title: 'Organisation & Triage',
+    features: [
+      { name: 'Unified inbox', description: 'Everything lands in inbox first — you decide where it goes', status: 'live' },
+      { name: 'Status-based views', description: 'Inbox, Focus, Next, Waiting, Scheduled, Someday, Logbook', status: 'live' },
+      { name: 'Type-based views', description: 'Filter by Projects, People, Ideas, Admin, Areas', status: 'live' },
+      { name: 'Tag views', description: 'Auto-collected tags in sidebar, click to filter', status: 'live' },
+      { name: 'Drag-and-drop triage', description: 'Drag cards onto status drop zones', status: 'live' },
+      { name: 'Inline editing', description: 'Click any card to edit title, notes, type, status, due date', status: 'live' },
+      { name: 'Bulk actions', description: 'Select multiple items and move, tag, or archive at once', status: 'planned' },
+      { name: 'Smart lists', description: 'Auto-generated views: overdue, stale items, due this week', status: 'planned' },
+      { name: 'Subtasks & dependencies', description: 'Nest items under parents, track blocking relationships', status: 'idea' },
+    ],
+  },
+  {
+    title: 'Search & Retrieval',
+    features: [
+      { name: 'Text search', description: 'Search across titles, content, and next actions', status: 'live' },
+      { name: '/brief command', description: 'Semantic vector search via WhatsApp', status: 'live' },
+      { name: 'Semantic search in dashboard', description: 'Vector-powered search — find items by meaning', status: 'live' },
+      { name: 'Context Wing', description: 'Slide-out panel showing related items for any selection', status: 'live' },
+      { name: 'Saved searches', description: 'Save frequent searches as sidebar shortcuts', status: 'idea' },
+    ],
+  },
+  {
+    title: 'Digests & Automation',
+    features: [
+      { name: 'Daily digest', description: 'Morning WhatsApp summary of focus items and due dates (7am)', status: 'live' },
+      { name: 'Weekly review', description: 'Sunday summary of wins, open items, suggested actions (9am)', status: 'live' },
+      { name: 'Recurring tasks', description: 'Daily, weekly, monthly recurrence with auto-generated instances', status: 'live' },
+      { name: 'Deferred items', description: 'Set a defer date — item hides until that date', status: 'live' },
+      { name: 'AI executor', description: '6 autonomous handlers running on 60s poll loop', status: 'live' },
+      { name: 'Reminders', description: 'Get a WhatsApp nudge at a specific time for an item', status: 'planned' },
+      { name: 'Auto-archive stale items', description: 'Items untouched for 30+ days get flagged or auto-archived', status: 'idea' },
+    ],
+  },
+  {
+    title: 'Dashboard & UX',
+    features: [
+      { name: 'Unified card design', description: 'All items look the same — title, type pill, next action checkboxes, meta badges', status: 'live' },
+      { name: 'Mobile responsive', description: 'Slide-out sidebar, touch-friendly cards, safe area support', status: 'live' },
+      { name: 'Keyboard shortcuts', description: 'Press N to quick-add, Escape to close modals', status: 'live' },
+      { name: 'Settings page', description: 'Configure AI behaviour, digest times, default views, and data management', status: 'building' },
+      { name: 'Dark mode', description: 'Toggle dark theme for the dashboard', status: 'planned' },
+      { name: 'PWA / installable app', description: 'Install the dashboard as a home screen app on mobile', status: 'planned' },
+      { name: 'Authentication', description: 'Login to protect your brain — currently open access', status: 'planned' },
+      { name: 'Dashboard widgets', description: 'At-a-glance stats: items processed this week, overdue count, focus streak', status: 'idea' },
+    ],
+  },
+  {
+    title: 'Infrastructure',
+    features: [
+      { name: 'Supabase (Postgres + pgvector)', description: 'Unified items table with vector embeddings for semantic search', status: 'live' },
+      { name: 'Railway backend', description: 'Node.js/Express agent handling WhatsApp webhooks and AI pipeline', status: 'live' },
+      { name: 'Vercel frontend', description: 'Next.js dashboard deployed on Vercel', status: 'live' },
+      { name: 'Twilio WhatsApp', description: 'WhatsApp sandbox for message capture', status: 'live' },
+      { name: 'WhatsApp Business number', description: 'Dedicated number — no more 72-hour sandbox expiry', status: 'planned' },
+      { name: 'Row-level security', description: 'Supabase tables locked down with RLS policies', status: 'live' },
+      { name: 'Automated backups', description: 'Scheduled exports of all items data', status: 'idea' },
+    ],
+  },
+];
+
+const FEATURE_BADGE: Record<FeatureStatus, { label: string; bg: string; color: string }> = {
+  live:     { label: 'LIVE',     bg: 'rgba(61,232,176,0.12)', color: 'var(--teal)' },
+  building: { label: 'BUILDING', bg: 'rgba(232,176,75,0.12)', color: 'var(--gold)' },
+  planned:  { label: 'PLANNED',  bg: 'rgba(100,160,255,0.12)', color: '#85B7EB' },
+  idea:     { label: 'IDEA',     bg: 'rgba(180,130,255,0.12)', color: '#AFA9EC' },
+};
+
+const PHASE_BADGE: Record<PhaseStatus, { bg: string; color: string; label: string }> = {
   complete: { bg: 'rgba(61,232,176,0.12)', color: 'var(--teal)', label: 'Complete' },
   active:   { bg: 'rgba(232,176,75,0.12)', color: 'var(--gold)', label: 'In Progress' },
   next:     { bg: 'rgba(100,160,255,0.12)', color: '#85B7EB', label: 'Next Up' },
   future:   { bg: 'rgba(255,255,255,0.05)', color: 'var(--dim)', label: 'Future' },
 };
 
+const mono = "'IBM Plex Mono', monospace";
+
 export default function RoadmapPanel() {
+  const [tab, setTab] = useState<'delivery' | 'features'>('delivery');
   const [stats, setStats] = useState<Stats>({ brainItems: 0, embedded: 0, aiTasks: 0, liveApps: 5 });
 
   useEffect(() => {
@@ -149,8 +242,8 @@ export default function RoadmapPanel() {
       .then((items: any[]) => {
         setStats({
           brainItems: items.length,
-          embedded: items.filter((i) => i.embedding).length,
-          aiTasks: items.filter((i) => i.doer === 'ai').length,
+          embedded: items.filter((i: any) => i.embedding).length,
+          aiTasks: items.filter((i: any) => i.doer === 'ai').length,
           liveApps: 5,
         });
       })
@@ -160,6 +253,9 @@ export default function RoadmapPanel() {
   const totalDone = PHASES.reduce((s, p) => s + p.items.filter((i) => i.status === 'done').length, 0);
   const totalItems = PHASES.reduce((s, p) => s + p.items.length, 0);
 
+  const featureTotals = { live: 0, building: 0, planned: 0, idea: 0 };
+  FEATURE_GROUPS.forEach((g) => g.features.forEach((f) => { featureTotals[f.status]++; }));
+
   return (
     <div style={{ maxWidth: 680 }}>
       <div className="mode-header">
@@ -167,6 +263,7 @@ export default function RoadmapPanel() {
         <div className="mode-sub">updated 30 March 2026</div>
       </div>
 
+      {/* Stats */}
       <div style={statsGrid}>
         <StatCard value={stats.brainItems} label="Brain items" />
         <StatCard value={stats.embedded} label="Embedded" />
@@ -174,36 +271,81 @@ export default function RoadmapPanel() {
         <StatCard value={stats.liveApps} label="Live apps" />
       </div>
 
-      <div style={decisionStyle}>
-        <strong style={{ display: 'block', marginBottom: 4, fontSize: 13 }}>Decision made 30 March:</strong>
-        ALAN OS absorbs the Brain Dashboard. The Brain Dashboard stays alive as a fallback/admin view. ALAN OS becomes the daily driver. Migration underway — 3 sessions planned.
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+        <TabBtn active={tab === 'delivery'} onClick={() => setTab('delivery')}>Delivery</TabBtn>
+        <TabBtn active={tab === 'features'} onClick={() => setTab('features')}>Features</TabBtn>
       </div>
 
-      <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 20, fontFamily: "'IBM Plex Mono', monospace" }}>
-        {totalDone} of {totalItems} milestones complete
-      </div>
-
-      {PHASES.map((phase, pi) => (
-        <div key={pi} style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <PhaseBadge status={phase.badge} />
-            <span style={{ fontSize: 16, fontWeight: 600, fontFamily: "'Syne', sans-serif" }}>{phase.title}</span>
+      {tab === 'delivery' ? (
+        <>
+          {/* Decision callout */}
+          <div style={decisionStyle}>
+            <strong style={{ display: 'block', marginBottom: 4, fontSize: 13 }}>Decision made 30 March:</strong>
+            ALAN OS absorbs the Brain Dashboard. The Brain Dashboard stays alive as a fallback/admin view. ALAN OS becomes the daily driver. Migration underway — 3 sessions planned.
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {phase.items.map((item, ii) => (
-              <div key={ii} style={{ ...itemStyle, opacity: item.status === 'done' ? 0.6 : 1 }}>
-                <CheckCircle done={item.status === 'done'} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)', lineHeight: 1.4 }}>{item.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 2, lineHeight: 1.4, fontFamily: "'IBM Plex Mono', monospace" }}>{item.meta}</div>
-                </div>
+
+          <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 20, fontFamily: mono }}>
+            {totalDone} of {totalItems} milestones complete
+          </div>
+
+          {PHASES.map((phase, pi) => (
+            <div key={pi} style={{ marginBottom: 28 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <Badge bg={PHASE_BADGE[phase.badge].bg} color={PHASE_BADGE[phase.badge].color}>{PHASE_BADGE[phase.badge].label}</Badge>
+                <span style={{ fontSize: 16, fontWeight: 600, fontFamily: "'Syne', sans-serif" }}>{phase.title}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {phase.items.map((item, ii) => (
+                  <div key={ii} style={{ ...itemRow, opacity: item.status === 'done' ? 0.6 : 1 }}>
+                    <CheckCircle done={item.status === 'done'} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)', lineHeight: 1.4 }}>{item.title}</div>
+                      <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 2, lineHeight: 1.4, fontFamily: mono }}>{item.meta}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        <>
+          {/* Feature summary pills */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' as const }}>
+            {(Object.entries(featureTotals) as [FeatureStatus, number][]).map(([status, count]) => (
+              <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Badge bg={FEATURE_BADGE[status].bg} color={FEATURE_BADGE[status].color}>{count}</Badge>
+                <span style={{ fontSize: 11, color: 'var(--dim)', fontFamily: mono }}>{FEATURE_BADGE[status].label}</span>
               </div>
             ))}
           </div>
-        </div>
-      ))}
 
-      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 11, color: 'var(--dim)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          {FEATURE_GROUPS.map((group, gi) => (
+            <div key={gi} style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, fontFamily: "'Syne', sans-serif", marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--b1)' }}>
+                {group.title}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {group.features.map((f, fi) => {
+                  const badge = FEATURE_BADGE[f.status];
+                  return (
+                    <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--s1)', borderRadius: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)' }}>{f.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 1, fontFamily: mono }}>{f.description}</div>
+                      </div>
+                      <Badge bg={badge.bg} color={badge.color}>{badge.label}</Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 11, color: 'var(--dim)', fontFamily: mono }}>
         Coolbrick Brain + ALAN OS Roadmap<br />Last updated: 30 March 2026
       </div>
     </div>
@@ -219,17 +361,29 @@ function StatCard({ value, label }: { value: number; label: string }) {
   );
 }
 
-function PhaseBadge({ status }: { status: PhaseStatus }) {
-  const s = BADGE_STYLES[status];
+function Badge({ bg, color, children }: { bg: string; color: string; children: React.ReactNode }) {
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
       textTransform: 'uppercase' as const, letterSpacing: '0.8px',
-      background: s.bg, color: s.color,
-      fontFamily: "'IBM Plex Mono', monospace",
+      background: bg, color, fontFamily: mono, whiteSpace: 'nowrap' as const, flexShrink: 0,
     }}>
-      {s.label}
+      {children}
     </span>
+  );
+}
+
+function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+      fontFamily: mono, border: '1px solid ' + (active ? 'var(--gold)' : 'var(--b1)'),
+      background: active ? 'rgba(232,176,75,0.1)' : 'transparent',
+      color: active ? 'var(--gold)' : 'var(--dim)', cursor: 'pointer',
+      transition: 'all 0.15s',
+    }}>
+      {children}
+    </button>
   );
 }
 
@@ -260,7 +414,7 @@ const decisionStyle: React.CSSProperties = {
   fontSize: 13, color: 'var(--teal)', lineHeight: 1.6,
 };
 
-const itemStyle: React.CSSProperties = {
+const itemRow: React.CSSProperties = {
   display: 'flex', alignItems: 'flex-start', gap: 10,
   padding: '10px 14px', background: 'var(--s1)', borderRadius: 8,
 };
