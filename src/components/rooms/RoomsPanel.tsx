@@ -13,6 +13,7 @@ interface Room {
   occupied: boolean;
   tenantName: string | null;
   tenancyEnd: string | null;
+  tenancyStatus: string | null;
 }
 
 const mono = "'IBM Plex Mono', monospace";
@@ -47,17 +48,44 @@ export default function RoomsPanel() {
 
   const fetchData = useCallback(async () => {
     try {
-      const r = await fetch('/api/coho?path=/properties&includeRooms=true&pageSize=50');
-      if (!r.ok) throw new Error('COHO HTTP ' + r.status);
-      const data = await r.json();
-      const allRooms: Room[] = [];
+      // Fetch properties + rooms AND tenancies in parallel
+      const [propRes, tenRes] = await Promise.all([
+        fetch('/api/coho?path=/properties&includeRooms=true&pageSize=50'),
+        fetch('/api/coho?path=/tenancies&pageSize=200'),
+      ]);
+      if (!propRes.ok) throw new Error('COHO properties HTTP ' + propRes.status);
+      if (!tenRes.ok) throw new Error('COHO tenancies HTTP ' + tenRes.status);
 
-      (data.items || []).forEach((prop: any) => {
-        const propRooms = prop.rooms || [];
-        propRooms.forEach((room: any) => {
-          const tenancy = room.activeTenancy;
+      const propData = await propRes.json();
+      const tenData = await tenRes.json();
+
+      // Build tenancy lookup by room reference
+      const tenancyByRoom: Record<string, { name: string; end: string | null; status: string }> = {};
+      (tenData.items || []).forEach((t: any) => {
+        const status = t.status || '';
+        if (status === 'active' || status === 'rolling' || status === 'upcoming') {
+          const roomRef = t.roomReference || '';
+          if (roomRef) {
+            tenancyByRoom[roomRef] = {
+              name: t.tenantName || t.tenantFirstName || 'Tenant',
+              end: t.endDate || null,
+              status,
+            };
+          }
+        }
+      });
+
+      const allRooms: Room[] = [];
+      (propData.items || []).forEach((prop: any) => {
+        (prop.rooms || []).forEach((room: any) => {
+          const ref = room.reference || '';
+          const tenancy = tenancyByRoom[ref] || null;
+          // Also check activeTenancy from the property endpoint as fallback
+          const apiTenancy = room.activeTenancy;
+          const isOccupied = !!(tenancy || apiTenancy);
+
           allRooms.push({
-            reference: room.reference || '',
+            reference: ref,
             name: room.name || 'Room',
             propertyName: prop.name || '',
             propertyRef: prop.reference || '',
@@ -65,9 +93,10 @@ export default function RoomsPanel() {
             rent: room.rent || 0,
             paymentFrequency: room.paymentFrequency || 'monthly',
             availableFrom: room.availableFrom || null,
-            occupied: !!tenancy,
-            tenantName: tenancy?.tenantName || null,
-            tenancyEnd: tenancy?.endDate || null,
+            occupied: isOccupied,
+            tenantName: tenancy?.name || apiTenancy?.tenantName || null,
+            tenancyEnd: tenancy?.end || apiTenancy?.endDate || null,
+            tenancyStatus: tenancy?.status || (apiTenancy ? 'active' : null),
           });
         });
       });
@@ -176,7 +205,9 @@ export default function RoomsPanel() {
 /* ── Room Row ── */
 function RoomRow({ room }: { room: Room }) {
   const days = room.occupied ? 0 : daysEmpty(room.availableFrom);
-  const urgency = days > 30 ? 'rose' : days > 14 ? 'gold' : days > 0 ? 'teal' : '';
+  // If days > 180 and room is vacant, it's likely stale COHO data
+  const staleData = !room.occupied && days > 180;
+  const urgency = staleData ? 'gold' : days > 30 ? 'rose' : days > 14 ? 'gold' : days > 0 ? 'teal' : '';
 
   return (
     <div style={{
@@ -188,7 +219,7 @@ function RoomRow({ room }: { room: Room }) {
       <div style={{
         width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
         background: room.occupied ? 'var(--teal)' : `var(--${urgency || 'gold'})`,
-        animation: !room.occupied && days > 30 ? 'pulse 1.8s infinite' : undefined,
+        animation: !room.occupied && days > 30 && !staleData ? 'pulse 1.8s infinite' : undefined,
       }} />
 
       {/* Room info */}
@@ -199,8 +230,11 @@ function RoomRow({ room }: { room: Room }) {
         </div>
         <div style={{ fontSize: 9, color: 'var(--dim)', fontFamily: mono, marginTop: 2 }}>
           {room.occupied
-            ? `${room.tenantName || 'Tenant'}${room.tenancyEnd ? ` · ends ${new Date(room.tenancyEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ' · rolling'}`
-            : days > 0 ? `Empty ${days}d` : room.availableFrom ? `Available from ${new Date(room.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Vacant'
+            ? `${room.tenantName || 'Tenant'}${room.tenancyStatus === 'rolling' ? ' · rolling' : room.tenancyEnd ? ` · ends ${new Date(room.tenancyEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}`
+            : staleData ? `Vacant · COHO date needs updating`
+            : days > 0 ? `Empty ${days}d`
+            : room.availableFrom ? `Available from ${new Date(room.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+            : 'Vacant'
           }
         </div>
       </div>
@@ -212,7 +246,12 @@ function RoomRow({ room }: { room: Room }) {
         border: `1px solid ${room.occupied ? 'rgba(61,232,176,.2)' : urgency === 'rose' ? 'rgba(232,75,106,.2)' : 'rgba(232,176,75,.2)'}`,
         color: room.occupied ? 'var(--teal)' : `var(--${urgency || 'gold'})`,
       }}>
-        {room.occupied ? 'Occupied' : days > 30 ? 'Critical' : days > 14 ? 'Overdue' : days > 0 ? 'Empty' : 'Available'}
+        {room.occupied ? (room.tenancyStatus === 'rolling' ? 'Rolling' : 'Occupied')
+          : staleData ? 'Check COHO'
+          : days > 30 ? 'Critical'
+          : days > 14 ? 'Overdue'
+          : days > 0 ? 'Empty'
+          : 'Available'}
       </span>
     </div>
   );
