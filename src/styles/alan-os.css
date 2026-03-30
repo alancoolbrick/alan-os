@@ -11,8 +11,9 @@
   --text:#ede9e4;--dim:rgba(237,233,228,.38);--mid:rgba(237,233,228,.7);
   --stream-w:218px;--wing-w:318px;--sidebar-w:48px;
 }
-html,body{height:100%;overflow:hidden}
+html,body,#__next{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column}
+#__next{display:flex;flex-direction:column}
 
 /* ═══ TOPBAR ═══ */
 .topbar{display:flex;align-items:center;padding:0 14px;height:46px;border-bottom:1px solid var(--b1);background:rgba(6,6,15,.98);gap:10px;flex-shrink:0;z-index:200}

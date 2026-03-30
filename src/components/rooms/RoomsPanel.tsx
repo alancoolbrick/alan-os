@@ -59,44 +59,46 @@ export default function RoomsPanel() {
       const propData = await propRes.json();
       const tenData = await tenRes.json();
 
-      // Build tenancy lookup by room reference
-      const tenancyByRoom: Record<string, { name: string; end: string | null; status: string }> = {};
+      // Build tenancy lookup by propertyReference (roomReference is unreliable)
+      const tenanciesByProperty: Record<string, Array<{ name: string; end: string | null; status: string }>> = {};
       (tenData.items || []).forEach((t: any) => {
         const status = t.status || '';
         if (status === 'active' || status === 'rolling' || status === 'upcoming') {
-          const roomRef = t.roomReference || '';
-          if (roomRef) {
-            tenancyByRoom[roomRef] = {
-              name: t.tenantName || t.tenantFirstName || 'Tenant',
-              end: t.endDate || null,
-              status,
-            };
-          }
+          const propRef = t.propertyReference || '';
+          if (!tenanciesByProperty[propRef]) tenanciesByProperty[propRef] = [];
+          const tenants = t.tenants || [];
+          const name = tenants.length > 0
+            ? tenants.map((tn: any) => tn.fullname || tn.forename || '').join(', ')
+            : 'Tenant';
+          tenanciesByProperty[propRef].push({ name, end: t.endDate || null, status });
         }
       });
 
       const allRooms: Room[] = [];
       (propData.items || []).forEach((prop: any) => {
-        (prop.rooms || []).forEach((room: any) => {
-          const ref = room.reference || '';
-          const tenancy = tenancyByRoom[ref] || null;
-          // Also check activeTenancy from the property endpoint as fallback
-          const apiTenancy = room.activeTenancy;
-          const isOccupied = !!(tenancy || apiTenancy);
+        const propRef = prop.reference || '';
+        const occupiedCount = prop.roomsOccupied || 0;
+        const propTenancies = tenanciesByProperty[propRef] || [];
+        const rooms = prop.rooms || [];
+
+        rooms.forEach((room: any, idx: number) => {
+          // Use property-level occupiedCount: first N rooms are occupied
+          const isOccupied = idx < occupiedCount;
+          const tenancy = isOccupied && propTenancies[idx] ? propTenancies[idx] : null;
 
           allRooms.push({
-            reference: ref,
+            reference: room.reference || '',
             name: room.name || 'Room',
             propertyName: prop.name || '',
-            propertyRef: prop.reference || '',
+            propertyRef: propRef,
             postcode: prop.postcode || '',
             rent: room.rent || 0,
             paymentFrequency: room.paymentFrequency || 'monthly',
             availableFrom: room.availableFrom || null,
             occupied: isOccupied,
-            tenantName: tenancy?.name || apiTenancy?.tenantName || null,
-            tenancyEnd: tenancy?.end || apiTenancy?.endDate || null,
-            tenancyStatus: tenancy?.status || (apiTenancy ? 'active' : null),
+            tenantName: tenancy?.name || null,
+            tenancyEnd: tenancy?.end || null,
+            tenancyStatus: tenancy?.status || null,
           });
         });
       });
