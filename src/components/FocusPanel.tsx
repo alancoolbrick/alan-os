@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase';
 import { Item, SidebarKey, SidebarItem, SidebarSection, SIDEBAR_ITEMS, SECTION_LABELS } from '@/lib/types';
 import ItemPanel from './focus/ItemPanel';
 import ItemModal from './focus/ItemModal';
-import Roadmap from './focus/Roadmap';
 import CommandBar from './CommandBar';
 import ContextWing from './ContextWing';
 
@@ -189,17 +188,13 @@ export default function FocusPanel() {
         </div>
 
         <div className="main-panel">
-          {view === 'roadmap' ? (
-            <Roadmap />
-          ) : (
-            <ItemPanel
-              items={items}
-              view={view}
-              search={search}
-              onUpdate={fetchItems}
-              onShowRelated={(id) => setRelatedItemId(id)}
-            />
-          )}
+          <ItemPanel
+            items={items}
+            view={view}
+            search={search}
+            onUpdate={fetchItems}
+            onShowRelated={(id) => setRelatedItemId(id)}
+          />
         </div>
       </div>
 
