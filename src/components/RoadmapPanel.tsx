@@ -229,6 +229,7 @@ const mono = "'IBM Plex Mono', monospace";
 
 export default function RoadmapPanel() {
   const [tab, setTab] = useState<'delivery' | 'features'>('delivery');
+  const [featureFilter, setFeatureFilter] = useState<FeatureStatus | 'all'>('all');
   const [stats, setStats] = useState<Stats>({ brainItems: 0, embedded: 0, aiTasks: 0, liveApps: 5 });
 
   useEffect(() => {
@@ -311,37 +312,56 @@ export default function RoadmapPanel() {
         </>
       ) : (
         <>
-          {/* Feature summary pills */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' as const }}>
+          {/* Feature filter pills — clickable */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' as const }}>
+            <FilterBadge active={featureFilter === 'all'} onClick={() => setFeatureFilter('all')}
+              bg="rgba(255,255,255,0.05)" color="var(--dim)">All ({Object.values(featureTotals).reduce((a, b) => a + b, 0)})</FilterBadge>
             {(Object.entries(featureTotals) as [FeatureStatus, number][]).map(([status, count]) => (
-              <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Badge bg={FEATURE_BADGE[status].bg} color={FEATURE_BADGE[status].color}>{count}</Badge>
-                <span style={{ fontSize: 11, color: 'var(--dim)', fontFamily: mono }}>{FEATURE_BADGE[status].label}</span>
-              </div>
+              <FilterBadge key={status} active={featureFilter === status} onClick={() => setFeatureFilter(status)}
+                bg={FEATURE_BADGE[status].bg} color={FEATURE_BADGE[status].color}>{FEATURE_BADGE[status].label} ({count})</FilterBadge>
             ))}
           </div>
 
-          {FEATURE_GROUPS.map((group, gi) => (
-            <div key={gi} style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, fontFamily: "'Syne', sans-serif", marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--b1)' }}>
-                {group.title}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {group.features.map((f, fi) => {
-                  const badge = FEATURE_BADGE[f.status];
-                  return (
-                    <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--s1)', borderRadius: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)' }}>{f.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 1, fontFamily: mono }}>{f.description}</div>
+          {featureFilter === 'all' ? (
+            /* Grouped by category */
+            FEATURE_GROUPS.map((group, gi) => (
+              <div key={gi} style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 16, fontWeight: 600, fontFamily: "'Syne', sans-serif", marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--b1)' }}>
+                  {group.title}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {group.features.map((f, fi) => {
+                    const badge = FEATURE_BADGE[f.status];
+                    return (
+                      <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--s1)', borderRadius: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)' }}>{f.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 1, fontFamily: mono }}>{f.description}</div>
+                        </div>
+                        <Badge bg={badge.bg} color={badge.color}>{badge.label}</Badge>
                       </div>
-                      <Badge bg={badge.bg} color={badge.color}>{badge.label}</Badge>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
+            ))
+          ) : (
+            /* Flat list filtered by status */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {FEATURE_GROUPS.flatMap((g) => g.features.filter((f) => f.status === featureFilter).map((f) => ({...f, group: g.title}))).map((f, fi) => {
+                const badge = FEATURE_BADGE[f.status];
+                return (
+                  <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--s1)', borderRadius: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)' }}>{f.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 1, fontFamily: mono }}>{f.description}</div>
+                    </div>
+                    <span style={{ fontSize: 9, color: 'var(--dim)', fontFamily: mono, whiteSpace: 'nowrap' as const, flexShrink: 0 }}>{f.group}</span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          )}
         </>
       )}
 
@@ -381,6 +401,22 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
       background: active ? 'rgba(232,176,75,0.1)' : 'transparent',
       color: active ? 'var(--gold)' : 'var(--dim)', cursor: 'pointer',
       transition: 'all 0.15s',
+    }}>
+      {children}
+    </button>
+  );
+}
+
+function FilterBadge({ active, onClick, bg, color, children }: { active: boolean; onClick: () => void; bg: string; color: string; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{
+      fontSize: 10, fontWeight: 700, padding: '5px 12px', borderRadius: 6,
+      textTransform: 'uppercase' as const, letterSpacing: '0.6px',
+      background: active ? bg : 'transparent',
+      color: active ? color : 'var(--dim)',
+      border: active ? `1px solid ${color}` : '1px solid var(--b1)',
+      fontFamily: mono, cursor: 'pointer', transition: 'all 0.15s',
+      opacity: active ? 1 : 0.6,
     }}>
       {children}
     </button>
