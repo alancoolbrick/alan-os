@@ -91,7 +91,7 @@ const PHASES: Phase[] = [
     badge: 'active', title: 'Data Hygiene',
     items: [
       { title: 'Embeddings nearly complete', meta: '157 of 158 embedded · 1 remaining · was 20 missing on 22 Mar', status: 'done' },
-      { title: '39 untagged items', meta: '25% of corpus · degrading filters and automation', status: 'planned' },
+      { title: 'Untagged items cleaned', meta: 'Was 39 untagged (25% of corpus) · all active items now tagged · 30 Mar', status: 'done' },
       { title: 'Inbox at 1 — maintain inbox zero habit', meta: 'Was 26 on 23 Mar · weekly 20-min triage pass', status: 'done' },
     ],
   },
