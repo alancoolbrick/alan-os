@@ -51,7 +51,7 @@ export default function RoomsPanel() {
       // Fetch properties + rooms AND tenancies in parallel
       const [propRes, tenRes] = await Promise.all([
         fetch('/api/coho?path=/properties&includeRooms=true&pageSize=50'),
-        fetch('/api/coho?path=/tenancies&pageSize=200'),
+        fetch('/api/coho?path=/tenancies&pageSize=100'),
       ]);
       if (!propRes.ok) throw new Error('COHO properties HTTP ' + propRes.status);
       if (!tenRes.ok) throw new Error('COHO tenancies HTTP ' + tenRes.status);
