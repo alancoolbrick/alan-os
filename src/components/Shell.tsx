@@ -6,13 +6,15 @@ import PeoplePanel from './people/PeoplePanel';
 import FinancePanel from './finance/FinancePanel';
 import BrainPanel from './brain/BrainPanel';
 import RoadmapPanel from './RoadmapPanel';
+import RoomsPanel from './rooms/RoomsPanel';
 import ClaudePanel from './claude/ClaudePanel';
 import CommandBar from './CommandBar';
 
-type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'roadmap' | 'claude';
+type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'roadmap' | 'rooms' | 'claude';
 
 const NAV_ITEMS: { icon: string; label: string; mode: Mode }[] = [
   { icon: '⬡', label: 'Property', mode: 'property' },
+  { icon: '🚪', label: 'Rooms', mode: 'rooms' },
   { icon: '◈', label: 'Finance', mode: 'finance' },
   { icon: '◎', label: 'Focus', mode: 'focus' },
   { icon: '✦', label: 'People', mode: 'people' },
@@ -53,7 +55,6 @@ export default function Shell() {
 
   const quickSend = useCallback((question: string) => {
     setActiveMode('claude');
-    // Give ClaudePanel a tick to mount, then dispatch
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('claude-quick-send', { detail: question }));
     }, 100);
@@ -114,6 +115,9 @@ export default function Shell() {
           <div className={`mode-panel ${activeMode === 'property' ? 'active' : ''}`}>
             <PropertyPanel />
           </div>
+          <div className={`mode-panel ${activeMode === 'rooms' ? 'active' : ''}`}>
+            <RoomsPanel />
+          </div>
           <div className={`mode-panel ${activeMode === 'finance' ? 'active' : ''}`}>
             <FinancePanel />
           </div>
@@ -143,15 +147,15 @@ export default function Shell() {
           <div className="cmd-modal">
             <CommandBar
               onNavigate={(key) => {
-                // Map sidebar keys to modes where possible
                 const modeMap: Record<string, Mode> = {
                   property: 'property', finance: 'finance', focus: 'focus',
                   people: 'people', brain: 'brain', claude: 'claude',
+                  rooms: 'rooms', roadmap: 'roadmap',
                   inbox: 'focus', next: 'focus', waiting: 'focus',
                   scheduled: 'focus', someday: 'focus', projects: 'focus',
                   ideas: 'focus', admin: 'focus', areas: 'focus',
                   tags: 'focus', logbook: 'focus', trash: 'focus',
-                  roadmap: 'roadmap', 'ai-queue': 'focus',
+                  'ai-queue': 'focus',
                 };
                 const mode = modeMap[key] || 'focus';
                 setActiveMode(mode);
