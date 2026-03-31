@@ -41,7 +41,7 @@ export default function FinancePanel() {
             <div className="fco">
               <div className="fco-row"><div className="fco-name">Solo Wave Ltd</div><div className="fco-val" style={{ color: 'var(--gold)' }}>£3,600/mo</div></div>
               <div className="bar"><div className="bar-fill" style={{ width: '100%', background: 'var(--gold)' }} /></div>
-              <div className="fco-sub">50% Alan · 50% Jacob Barnett</div>
+              <div className="fco-sub">50% Alan · 50% Jake Barnett</div>
             </div>
             <div className="fco">
               <div className="fco-row"><div className="fco-name">Personal</div><div className="fco-val" style={{ color: 'var(--mid)' }}>£1,500/mo</div></div>
