@@ -1,8 +1,18 @@
 # Brain Dashboard → ALAN OS Migration Plan
 
-**Date:** 30 March 2026
+**Date:** 30 March 2026 (migration plan) · **Updated:** 31 March 2026
 **Scope:** Migrate Brain Dashboard `/tasks` functionality into ALAN OS as the Focus panel
 **Approach:** Convert ALAN OS from static HTML + patches to a proper Next.js/React app
+
+## Current State (31 March 2026)
+
+- **ALAN OS deployed at** `alan-os-gamma.vercel.app` (auto-deploys from `main`)
+- **Sessions 1 & 2 complete.** All React panels live: Property, Focus, People, Finance, Brain, Roadmap, Rooms, Claude, ActionStream
+- **Session 3 (Polish + Deploy) and CSS dark-theme** are the remaining migration tasks
+- **RoadmapPanel synced** — 10+ stale "planned" items marked as shipped (31 Mar)
+- **Brain agent (coolbrick-agent)** now has 10 WhatsApp commands: /help /save /brief /zoom /remind /status /coho /review /audit /burkeman
+- **9 cron jobs** running on Railway: watchdog, roadmap stats, digest, review, audit, mem0 backup, burkeman, reminders, keepalive
+- **Portfolio:** 29/37 rooms occupied (78%), 8 voids across 6 properties, 41 open maintenance items
 
 ---
 
