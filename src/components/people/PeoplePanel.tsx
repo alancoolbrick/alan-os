@@ -13,15 +13,15 @@ const KNOWN_ROLES: Record<string, string> = {
   'andrzej': 'Handyman \u00B7 Trowbridge',
   'kieran': 'Gorilla Accounting \u00B7 FreeAgent \u00B7 Payroll',
   'kieran whelan': 'Gorilla Accounting \u00B7 FreeAgent \u00B7 Payroll',
-  'jacob': 'Solo Wave Ltd \u00B7 50/50',
-  'jacob barnett': 'Solo Wave Ltd \u00B7 50/50',
+  'jake': 'Solo Wave Ltd \u00B7 50/50',
+  'jake barnett': 'Solo Wave Ltd \u00B7 50/50',
   'nicole': 'Silent partner \u00B7 PKS (25%) \u00B7 Roomy (50%)',
   'nic': 'Silent partner \u00B7 PKS (25%) \u00B7 Roomy (50%)',
   'lukasz': 'PKS 50% \u00B7 Viewings Trowbridge \u00B7 Longfield House',
   'lukasz palmowski': 'PKS 50% \u00B7 Viewings Trowbridge \u00B7 Longfield House',
 };
 
-const PARTNER_NAMES = ['jacob', 'nicole', 'nic'];
+const PARTNER_NAMES = ['jake', 'nicole', 'nic'];
 const SILENT_PARTNERS = ['nicole', 'nic'];
 const NAME_ALIASES: Record<string, string[]> = {
   'nicole': ['nic', 'nick'],
