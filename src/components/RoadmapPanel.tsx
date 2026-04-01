@@ -69,19 +69,20 @@ const PHASES: Phase[] = [
     ],
   },
   {
-    badge: 'active', title: 'ALAN OS ← Brain Dashboard Migration',
+    badge: 'complete', title: 'ALAN OS ← Brain Dashboard Migration',
     items: [
       { title: 'Session 1: Foundation — convert alan-os to Next.js/TypeScript', meta: 'Upgrade deps · copy 10 components + 4 API routes from Brain · FocusPanel wrapper · ~2 hrs', status: 'done' },
       { title: 'Session 2: Shell integration — build ALAN OS chrome as React', meta: 'Convert patch files to components · wire panel switching · global Cmd+K + ContextWing · ~1.5 hrs', status: 'done' },
-      { title: 'Session 3: Polish + deploy', meta: 'Delete old files · Vercel env vars · smoke test all panels · update AGENTS.md · ~1 hr', status: 'active' },
-      { title: 'CSS dark-theme adaptation', meta: 'Brain light theme → ALAN OS dark theme · biggest risk in the migration', status: 'active' },
+      { title: 'Session 3: Polish + deploy', meta: 'Delete old files · Vercel env vars · smoke test all panels · update AGENTS.md · shipped 30 Mar', status: 'done' },
+      { title: 'CSS dark-theme adaptation', meta: 'Audit hardcoded colours → CSS variables · prefers-color-scheme · needs Alan visual review', status: 'planned' },
     ],
   },
   {
-    badge: 'active', title: 'Three-Agent Pipeline',
+    badge: 'next', title: 'Three-Agent Pipeline',
     items: [
       { title: 'Architecture spec + agent_relay table + missions table', meta: 'Gemini Eyes + Claude Brain + Cowork Hands · Supabase coordination · 29 Mar', status: 'done' },
       { title: '2 missions seeded', meta: 'Hammock Morning Check (8 steps) · COHO Occupancy Check (7 steps) · 29 Mar', status: 'done' },
+      { title: '/mission command — WhatsApp mission control', meta: 'Start/list/check missions · relay loop polling · shipped 31 Mar', status: 'done' },
       { title: 'Wire Gemini agent code to agent_relay', meta: 'OpenClaw repo · reads missions · posts observations · awaits decisions', status: 'planned' },
       { title: 'Wire Cowork as Hands executor', meta: 'Reads action commands from relay · drives browser + terminal', status: 'planned' },
       { title: 'First end-to-end autonomous mission', meta: 'Hammock morning arrears check without Alan touching anything', status: 'planned' },
