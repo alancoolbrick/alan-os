@@ -8,9 +8,10 @@ import BrainPanel from './brain/BrainPanel';
 import RoadmapPanel from './RoadmapPanel';
 import RoomsPanel from './rooms/RoomsPanel';
 import ClaudePanel from './claude/ClaudePanel';
+import EyesPanel from './EyesPanel';
 import CommandBar from './CommandBar';
 
-type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'roadmap' | 'rooms' | 'claude';
+type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'roadmap' | 'rooms' | 'eyes' | 'claude';
 
 const NAV_ITEMS: { icon: string; label: string; mode: Mode }[] = [
   { icon: '⬡', label: 'Property', mode: 'property' },
@@ -19,6 +20,7 @@ const NAV_ITEMS: { icon: string; label: string; mode: Mode }[] = [
   { icon: '◎', label: 'Focus', mode: 'focus' },
   { icon: '✦', label: 'People', mode: 'people' },
   { icon: '⊛', label: 'Brain', mode: 'brain' },
+  { icon: '👁', label: 'Eyes', mode: 'eyes' },
   { icon: '📊', label: 'Roadmap', mode: 'roadmap' },
 ];
 
@@ -133,6 +135,9 @@ export default function Shell() {
           <div className={`mode-panel ${activeMode === 'roadmap' ? 'active' : ''}`}>
             <RoadmapPanel />
           </div>
+          <div className={`mode-panel ${activeMode === 'eyes' ? 'active' : ''}`}>
+            <EyesPanel />
+          </div>
           <div className={`mode-panel ${activeMode === 'claude' ? 'active' : ''}`}>
             <ClaudePanel />
           </div>
@@ -150,7 +155,7 @@ export default function Shell() {
                 const modeMap: Record<string, Mode> = {
                   property: 'property', finance: 'finance', focus: 'focus',
                   people: 'people', brain: 'brain', claude: 'claude',
-                  rooms: 'rooms', roadmap: 'roadmap',
+                  rooms: 'rooms', roadmap: 'roadmap', eyes: 'eyes',
                   inbox: 'focus', next: 'focus', waiting: 'focus',
                   scheduled: 'focus', someday: 'focus', projects: 'focus',
                   ideas: 'focus', admin: 'focus', areas: 'focus',
