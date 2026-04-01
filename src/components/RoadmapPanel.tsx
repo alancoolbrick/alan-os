@@ -90,9 +90,10 @@ const PHASES: Phase[] = [
   {
     badge: 'complete', title: 'Data Hygiene',
     items: [
-      { title: 'Embeddings nearly complete', meta: '37 of 39 active items embedded · 2 remaining · was 20 missing on 22 Mar', status: 'done' },
+      { title: 'Embeddings complete — 0 missing', meta: '42 active items all embedded · watchdog self-heals any gaps · 1 Apr', status: 'done' },
       { title: 'Untagged items cleaned', meta: 'Was 39 untagged (25% of corpus) · all active items now tagged · 30 Mar', status: 'done' },
       { title: 'Inbox at 0 — inbox zero maintained', meta: 'Was 26 on 23 Mar · weekly triage pass · currently 0', status: 'done' },
+      { title: 'Scheduler idempotency', meta: 'claim_scheduler_lock() prevents 5x firing on Railway restart · 31 Mar', status: 'done' },
     ],
   },
   {
@@ -100,6 +101,10 @@ const PHASES: Phase[] = [
     items: [
       { title: '/brief uses items + core_memory together', meta: 'Parallel query · core_memory grouped by category · shipped 25 Mar', status: 'done' },
       { title: 'Auto-archive done items + auto-dedup', meta: 'Watchdog self-heals: archives done-not-archived · deduplicates by title · 31 Mar', status: 'done' },
+      { title: 'Stale item detector + auto-archive', meta: 'Watchdog archives items untouched 30+ days · excludes focus/scheduled · 31 Mar', status: 'done' },
+      { title: 'Embedding quality audit RPC', meta: 'Flags short-content + stale embeddings · wired into watchdog · 1 Apr', status: 'done' },
+      { title: 'Occupancy trend tracking', meta: 'Daily COHO snapshots to occupancy_log table · 7:30am cron · 1 Apr', status: 'done' },
+      { title: 'Weekly HTML recap digest', meta: 'Styled report stored as Brain item · Sun 11am UTC · 1 Apr', status: 'done' },
       { title: 'Cross-reference People → Areas → Projects', meta: 'Surface related context across types automatically', status: 'planned' },
       { title: 'Classification feedback loop', meta: 'High revision_count → auto-adjust classifier prompt · needs more override data', status: 'planned' },
     ],
@@ -112,8 +117,14 @@ const PHASES: Phase[] = [
       { title: '/burkeman — Sunday philosophical reflection', meta: 'Queries week activity + focus + core_memory · Sun 6pm UTC cron · shipped 31 Mar', status: 'done' },
       { title: '/status — instant brain health snapshot', meta: 'No Claude call · item counts, inbox, embeddings, AI queue · shipped 31 Mar', status: 'done' },
       { title: '/coho — instant COHO portfolio snapshot', meta: 'Occupancy %, voids, open maintenance via API · no Claude call · shipped 31 Mar', status: 'done' },
-      { title: '/help — command discoverability', meta: 'Lists all 10 available commands · shipped 31 Mar', status: 'done' },
-      { title: 'PDF ingestion pipeline', meta: 'Extract → Claude structures to JSON → embed → store', status: 'planned' },
+      { title: '/help — command discoverability', meta: 'Lists all 11 available commands · shipped 31 Mar', status: 'done' },
+      { title: '/mission — three-agent mission control', meta: 'Start/list/check missions via WhatsApp · agent_relay table · shipped 31 Mar', status: 'done' },
+      { title: '/focus — daily focus digest', meta: 'Returns focus items with next actions · wired into daily digest · shipped 1 Apr', status: 'done' },
+      { title: '/tag — tag browsing and management', meta: 'List all tags · search by tag · add/remove tags · shipped 1 Apr', status: 'done' },
+      { title: '/find — fast keyword search', meta: 'Instant ILIKE search · no Claude call · <1 second · shipped 1 Apr', status: 'done' },
+      { title: 'PDF auto-vectorise on /save', meta: 'Detect PDF URLs · Claude text extraction · 10MB limit · shipped 31 Mar', status: 'done' },
+      { title: 'Hybrid search for /brief', meta: '30% keyword + 70% vector via search_brain_hybrid RPC · shipped 31 Mar', status: 'done' },
+      { title: 'Command dedup guard', meta: 'check_brain_command_dedup() prevents duplicate processing · shipped 31 Mar', status: 'done' },
       { title: 'Custom domain for ALAN OS', meta: 'os.coolbrick.com · Vercel custom domain setup', status: 'planned' },
     ],
   },
@@ -129,7 +140,9 @@ const PHASES: Phase[] = [
   {
     badge: 'future', title: 'Infrastructure',
     items: [
-      { title: 'COHO MCP server built', meta: '10 tools wrapping REST API · installable in Claude Desktop/Antigravity · shipped 30 Mar', status: 'done' },
+      { title: 'COHO MCP server built', meta: '14 tools wrapping REST API · installable in Claude Desktop/Antigravity · shipped 30 Mar', status: 'done' },
+      { title: 'Roadmap stats auto-updater', meta: '6:50am daily cron · auto-commits to repo if changed · 31 Mar', status: 'done' },
+      { title: 'Mem0 weekly backup', meta: 'Sunday 10am UTC · auto-commits mem0-backup.json to GitHub · 31 Mar', status: 'done' },
       { title: 'Hammock API access', meta: 'No public API · Finance panel blocked until this exists', status: 'planned' },
     ],
   },
@@ -146,6 +159,8 @@ const FEATURE_GROUPS: FeatureGroup[] = [
       { name: 'Quick add from dashboard', description: 'Type into the quick-add bar to create items directly', status: 'live' },
       { name: '/save command', description: 'Bulk-save Claude session outputs to your brain via WhatsApp', status: 'live' },
       { name: 'Voice note capture', description: 'Send voice notes via WhatsApp, transcribe and classify them', status: 'live' },
+      { name: 'YouTube auto-vectorise', description: 'Send a YouTube URL via /save — transcript extracted and embedded', status: 'live' },
+      { name: 'PDF auto-vectorise', description: 'Send a PDF URL via /save — text extracted via Claude and embedded', status: 'live' },
       { name: 'Email capture', description: 'Forward emails to an inbox address and have them classified', status: 'planned' },
       { name: 'Fireflies meeting capture', description: 'Auto-import action items from meeting transcripts', status: 'planned' },
       { name: 'Photo/document capture', description: 'Send photos of documents — extract text and classify', status: 'idea' },
@@ -169,7 +184,9 @@ const FEATURE_GROUPS: FeatureGroup[] = [
     title: 'Search & Retrieval',
     features: [
       { name: 'Text search', description: 'Search across titles, content, and next actions', status: 'live' },
-      { name: '/brief command', description: 'Semantic vector search via WhatsApp', status: 'live' },
+      { name: '/brief command', description: 'Hybrid semantic + keyword search via WhatsApp (30% keyword + 70% vector)', status: 'live' },
+      { name: '/find command', description: 'Instant keyword search — no Claude call, <1 second', status: 'live' },
+      { name: '/tag command', description: 'Browse all tags, search by tag, add/remove tags from WhatsApp', status: 'live' },
       { name: 'Semantic search in dashboard', description: 'Vector-powered search — find items by meaning', status: 'live' },
       { name: 'Context Wing', description: 'Slide-out panel showing related items for any selection', status: 'live' },
       { name: 'Saved searches', description: 'Save frequent searches as sidebar shortcuts', status: 'idea' },
@@ -184,7 +201,10 @@ const FEATURE_GROUPS: FeatureGroup[] = [
       { name: 'Deferred items', description: 'Set a defer date — item hides until that date', status: 'live' },
       { name: 'AI executor', description: '6 autonomous handlers running on 60s poll loop', status: 'live' },
       { name: 'Reminders', description: '/remind command with natural language parsing + 15-min cron delivery', status: 'live' },
-      { name: 'Auto-archive stale items', description: 'Watchdog auto-archives done-not-archived items + deduplicates daily', status: 'live' },
+      { name: 'Auto-archive stale items', description: 'Watchdog auto-archives done-not-archived + stale 30d + deduplicates daily', status: 'live' },
+      { name: 'Occupancy trend tracking', description: 'Daily COHO snapshots logged to occupancy_log for trend analysis', status: 'live' },
+      { name: 'Embedding quality audit', description: 'Watchdog flags items with weak or stale embeddings', status: 'live' },
+      { name: 'Weekly HTML recap', description: 'Styled HTML digest with Brain + COHO stats stored as Brain item', status: 'live' },
     ],
   },
   {
@@ -369,7 +389,7 @@ export default function RoadmapPanel() {
       )}
 
       <div style={{ textAlign: 'center', marginTop: 32, fontSize: 11, color: 'var(--dim)', fontFamily: mono }}>
-        Coolbrick Brain + ALAN OS Roadmap<br />Last updated: 30 March 2026
+        Coolbrick Brain + ALAN OS Roadmap<br />Last updated: 1 April 2026
       </div>
     </div>
   );
