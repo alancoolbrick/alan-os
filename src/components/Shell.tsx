@@ -11,7 +11,7 @@ import ClaudePanel from './claude/ClaudePanel';
 import EyesPanel from './EyesPanel';
 import CommandBar from './CommandBar';
 
-type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'roadmap' | 'rooms' | 'eyes' | 'claude';
+type Mode = 'property' | 'finance' | 'focus' | 'people' | 'brain' | 'eyes' | 'roadmap' | 'rooms' | 'claude';
 
 const NAV_ITEMS: { icon: string; label: string; mode: Mode }[] = [
   { icon: '⬡', label: 'Property', mode: 'property' },
@@ -132,11 +132,11 @@ export default function Shell() {
           <div className={`mode-panel ${activeMode === 'brain' ? 'active' : ''}`}>
             <BrainPanel />
           </div>
-          <div className={`mode-panel ${activeMode === 'roadmap' ? 'active' : ''}`}>
-            <RoadmapPanel />
-          </div>
           <div className={`mode-panel ${activeMode === 'eyes' ? 'active' : ''}`}>
             <EyesPanel />
+          </div>
+          <div className={`mode-panel ${activeMode === 'roadmap' ? 'active' : ''}`}>
+            <RoadmapPanel />
           </div>
           <div className={`mode-panel ${activeMode === 'claude' ? 'active' : ''}`}>
             <ClaudePanel />
@@ -154,13 +154,11 @@ export default function Shell() {
               onNavigate={(key) => {
                 const modeMap: Record<string, Mode> = {
                   property: 'property', finance: 'finance', focus: 'focus',
-                  people: 'people', brain: 'brain', claude: 'claude',
-                  rooms: 'rooms', roadmap: 'roadmap', eyes: 'eyes',
+                  people: 'people', brain: 'brain', eyes: 'eyes', claude: 'claude',
+                  rooms: 'rooms', roadmap: 'roadmap',
                   inbox: 'focus', next: 'focus', waiting: 'focus',
                   scheduled: 'focus', someday: 'focus', projects: 'focus',
-                  ideas: 'focus', admin: 'focus', areas: 'focus',
-                  tags: 'focus', logbook: 'focus', trash: 'focus',
-                  'ai-queue': 'focus',
+                  reference: 'focus', logbook: 'focus',
                 };
                 const mode = modeMap[key] || 'focus';
                 setActiveMode(mode);

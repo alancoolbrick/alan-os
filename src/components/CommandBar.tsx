@@ -12,17 +12,10 @@ interface CommandBarProps {
 
 /** Map a search result to the correct sidebar view */
 function resultToSidebarKey(result: SearchResult): SidebarKey {
-  // Reference types → their dedicated sidebar section
-  const typeMap: Partial<Record<ItemType, SidebarKey>> = {
-    project: 'projects',
-    people: 'people',
-    idea: 'ideas',
-    admin: 'admin',
-    area: 'areas',
-  };
-  if (typeMap[result.type]) return typeMap[result.type]!;
+  // Projects get their own sidebar view
+  if (result.type === 'project') return 'projects';
 
-  // Tasks → route by status
+  // Route by status
   const statusMap: Partial<Record<ItemStatus, SidebarKey>> = {
     inbox: 'inbox',
     focus: 'focus',
@@ -30,8 +23,8 @@ function resultToSidebarKey(result: SearchResult): SidebarKey {
     waiting: 'waiting',
     scheduled: 'scheduled',
     someday: 'someday',
+    reference: 'reference',
     done: 'logbook',
-    archived: 'trash',
   };
   return statusMap[result.status] || 'inbox';
 }

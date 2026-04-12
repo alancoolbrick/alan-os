@@ -1274,3 +1274,61 @@
   .context-wing { position: fixed; box-shadow: none; }
   .focus-main.wing-open { margin-right: 320px; transition: margin-right 300ms ease-out; }
 }
+
+/* ============================================================
+   DOER FILTER PILLS
+   ============================================================ */
+
+.doer-filter {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.doer-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--focus-text-secondary, #888);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.doer-pill:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.doer-pill-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--focus-text-primary, #fff);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.doer-pill-count {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* ============================================================
+   EXECUTION STATUS BADGES
+   ============================================================ */
+
+.exec-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.exec-badge-pending { background: #854d0e22; color: #facc15; }
+.exec-badge-claimed { background: #0369a122; color: #38bdf8; }
+.exec-badge-done { background: #065f4622; color: #4ade80; }
+.exec-badge-dry_run_complete { background: #ffffff11; color: #888; }
+.exec-badge-needs_human { background: #9d174d22; color: #f472b6; }

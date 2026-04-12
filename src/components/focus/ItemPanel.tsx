@@ -20,7 +20,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Item, SidebarKey, ItemType, ItemStatus } from '@/lib/types';
+import { Item, SidebarKey, ItemStatus } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import ItemCard from './ItemCard';
 
@@ -28,6 +28,7 @@ interface ItemPanelProps {
   items: Item[];
   view: SidebarKey;
   search: string;
+  doerFilter: 'all' | 'human' | 'ai';
   onUpdate: () => void;
   onShowRelated?: (itemId: string) => void;
 }
@@ -39,16 +40,12 @@ const STATUS_VIEWS: Record<string, (item: Item) => boolean> = {
   waiting:   (i) => i.status === 'waiting' && !i.archived,
   scheduled: (i) => i.status === 'scheduled' && !i.archived,
   someday:   (i) => i.status === 'someday' && !i.archived,
+  reference: (i) => i.status === 'reference' && !i.archived,
   logbook:   (i) => i.status === 'done',
-  trash:     (i) => i.archived,
 };
 
-const TYPE_VIEWS: Record<string, ItemType> = {
-  projects: 'project',
-  people:   'people',
-  ideas:    'idea',
-  admin:    'admin',
-  areas:    'area',
+const SPECIAL_VIEWS: Record<string, (item: Item) => boolean> = {
+  projects: (i) => i.type === 'project' && !i.archived && i.status !== 'done',
 };
 
 function getViewTitle(view: SidebarKey): string {
@@ -59,13 +56,9 @@ function getViewTitle(view: SidebarKey): string {
     case 'waiting': return 'Waiting';
     case 'scheduled': return 'Scheduled';
     case 'someday': return 'Someday / Maybe';
-    case 'logbook': return 'Logbook';
-    case 'trash': return 'Trash';
     case 'projects': return 'Projects';
-    case 'people': return 'People';
-    case 'ideas': return 'Ideas';
-    case 'admin': return 'Admin';
-    case 'areas': return 'Areas';
+    case 'reference': return 'Reference';
+    case 'logbook': return 'Logbook';
     default:
       if (typeof view === 'string' && view.startsWith('tag:')) return `Tag: ${view.slice(4)}`;
       return '';
@@ -78,8 +71,8 @@ function getEmptyMessage(view: SidebarKey): string {
     case 'focus': return 'Nothing in focus. Star items to add them here.';
     case 'waiting': return 'Not waiting on anything.';
     case 'scheduled': return 'Nothing scheduled.';
+    case 'reference': return 'Nothing in reference.';
     case 'logbook': return 'No completed items yet.';
-    case 'trash': return 'Trash is empty.';
     default: return 'Nothing here.';
   }
 }
@@ -136,7 +129,7 @@ function SortableItemCard({ item, onUpdate, isInbox, onShowRelated }: { item: It
   );
 }
 
-export default function ItemPanel({ items, view, search, onUpdate, onShowRelated }: ItemPanelProps) {
+export default function ItemPanel({ items, view, search, doerFilter, onUpdate, onShowRelated }: ItemPanelProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overDropZone, setOverDropZone] = useState<string | null>(null);
   const q = search.toLowerCase().trim();
@@ -151,18 +144,25 @@ export default function ItemPanel({ items, view, search, onUpdate, onShowRelated
 
   const filtered = items.filter((item) => {
     const statusFilter = STATUS_VIEWS[view as string];
+    const specialFilter = SPECIAL_VIEWS[view as string];
     if (statusFilter) {
       if (!statusFilter(item)) return false;
-    } else if (TYPE_VIEWS[view as string]) {
-      const itemType = TYPE_VIEWS[view as string];
-      if (item.type !== itemType) return false;
-      if (item.status === 'done' || item.archived) return false;
+    } else if (specialFilter) {
+      if (!specialFilter(item)) return false;
     } else if (typeof view === 'string' && view.startsWith('tag:')) {
       const tag = view.slice(4);
       if (!item.tags?.includes(tag)) return false;
       if (item.status === 'done' || item.archived) return false;
     } else {
       return false;
+    }
+
+    if (doerFilter !== 'all') {
+      if (doerFilter === 'human') {
+        if (item.doer !== 'human' && item.doer !== null) return false;
+      } else {
+        if (item.doer !== doerFilter) return false;
+      }
     }
 
     if (q) {

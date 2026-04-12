@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Item, SidebarKey, SidebarItem, SidebarSection, SIDEBAR_ITEMS, SECTION_LABELS } from '@/lib/types';
 import ItemPanel from './focus/ItemPanel';
@@ -15,6 +15,7 @@ export default function FocusPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [relatedItemId, setRelatedItemId] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [doerFilter, setDoerFilter] = useState<'all' | 'human' | 'ai'>('all');
 
   const fetchItems = useCallback(async () => {
     const { data, error } = await supabase
@@ -66,37 +67,40 @@ export default function FocusPanel() {
   // Count items per sidebar view
   const getCounts = () => {
     const counts: Record<string, number> = {};
-    const statusMap: Record<string, string> = {
-      inbox: 'inbox', focus: 'focus', next: 'next',
-      waiting: 'waiting', scheduled: 'scheduled', someday: 'someday',
-    };
-    const typeMap: Record<string, string> = {
-      projects: 'project', people: 'people', ideas: 'idea',
-      admin: 'admin', areas: 'area',
-    };
 
     items.forEach((item) => {
-      if (item.archived) {
-        counts['trash'] = (counts['trash'] || 0) + 1;
-        return;
-      }
+      if (item.archived) return;
+
       if (item.status === 'done') {
         counts['logbook'] = (counts['logbook'] || 0) + 1;
         return;
       }
+
       // Status counts
-      Object.entries(statusMap).forEach(([key, status]) => {
-        if (item.status === status) counts[key] = (counts[key] || 0) + 1;
+      const statusKeys = ['inbox', 'focus', 'next', 'waiting', 'scheduled', 'someday', 'reference'];
+      statusKeys.forEach(key => {
+        if (item.status === key) counts[key] = (counts[key] || 0) + 1;
       });
-      // Type counts
-      Object.entries(typeMap).forEach(([key, type]) => {
-        if (item.type === type) counts[key] = (counts[key] || 0) + 1;
-      });
+
+      // Projects count
+      if (item.type === 'project') {
+        counts['projects'] = (counts['projects'] || 0) + 1;
+      }
     });
+
     return counts;
   };
 
   const counts = getCounts();
+
+  const doerCounts = useMemo(() => {
+    const active = items.filter(i => !i.archived && i.status !== 'done');
+    return {
+      all: active.length,
+      human: active.filter(i => i.doer === 'human' || !i.doer).length,
+      ai: active.filter(i => i.doer === 'ai').length,
+    };
+  }, [items]);
 
   // Group sidebar items by section
   const sections = SIDEBAR_ITEMS.reduce((acc, item) => {
@@ -187,11 +191,25 @@ export default function FocusPanel() {
           </button>
         </div>
 
+        <div className="doer-filter">
+          {(['all', 'human', 'ai'] as const).map((d) => (
+            <button
+              key={d}
+              className={`doer-pill ${doerFilter === d ? 'doer-pill-active' : ''}`}
+              onClick={() => setDoerFilter(d)}
+            >
+              {d === 'all' ? '🔵 All' : d === 'human' ? '👤 Human' : '🤖 AI'}
+              <span className="doer-pill-count">{doerCounts[d]}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="main-panel">
           <ItemPanel
             items={items}
             view={view}
             search={search}
+            doerFilter={doerFilter}
             onUpdate={fetchItems}
             onShowRelated={(id) => setRelatedItemId(id)}
           />

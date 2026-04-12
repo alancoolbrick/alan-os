@@ -3,7 +3,7 @@
 // ============================================================
 
 export type ItemType = 'task' | 'people' | 'project' | 'idea' | 'admin' | 'area';
-export type ItemStatus = 'inbox' | 'next' | 'focus' | 'waiting' | 'scheduled' | 'someday' | 'done' | 'archived';
+export type ItemStatus = 'inbox' | 'next' | 'focus' | 'waiting' | 'scheduled' | 'someday' | 'done' | 'archived' | 'reference';
 
 export interface NextAction {
   text: string;
@@ -33,11 +33,13 @@ export interface Item {
   archived: boolean;
   created_at: string;
   updated_at: string;
+  doer: 'human' | 'ai' | null;
+  execution_status: 'pending' | 'claimed' | 'done' | 'dry_run_complete' | 'needs_human' | null;
 }
 
 // ── Sidebar Navigation ─────────────────────────────────────
 
-export type SidebarSection = 'capture' | 'actions' | 'reference' | 'cleanup' | 'system';
+export type SidebarSection = 'collect' | 'actions' | 'organise' | 'archive';
 
 export type SidebarKey =
   | 'inbox'
@@ -47,15 +49,9 @@ export type SidebarKey =
   | 'scheduled'
   | 'someday'
   | 'projects'
-  | 'people'
-  | 'ideas'
-  | 'admin'
-  | 'areas'
-  | `tag:${string}`
+  | 'reference'
   | 'logbook'
-  | 'trash'
-  | 'roadmap'
-  | 'ai-queue';
+  | `tag:${string}`;
 
 export interface SidebarItem {
   key: SidebarKey;
@@ -65,29 +61,22 @@ export interface SidebarItem {
 }
 
 export const SIDEBAR_ITEMS: SidebarItem[] = [
-  { key: 'inbox',     label: 'Inbox',     icon: '📥', section: 'capture' },
+  { key: 'inbox',     label: 'Inbox',     icon: '📥', section: 'collect' },
   { key: 'focus',     label: 'Focus',     icon: '★',  section: 'actions' },
   { key: 'next',      label: 'Next',      icon: '»',  section: 'actions' },
   { key: 'waiting',   label: 'Waiting',   icon: '◻',  section: 'actions' },
   { key: 'scheduled', label: 'Scheduled', icon: '📅', section: 'actions' },
   { key: 'someday',   label: 'Someday',   icon: '◇',  section: 'actions' },
-  { key: 'projects',  label: 'Projects',  icon: '📁', section: 'reference' },
-  { key: 'people',    label: 'People',    icon: '👤', section: 'reference' },
-  { key: 'ideas',     label: 'Ideas',     icon: '💡', section: 'reference' },
-  { key: 'admin',     label: 'Admin',     icon: '📋', section: 'reference' },
-  { key: 'areas',     label: 'Areas',     icon: '◉',  section: 'reference' },
-  { key: 'logbook',   label: 'Logbook',   icon: '✓',  section: 'cleanup' },
-  { key: 'trash',     label: 'Trash',     icon: '🗑', section: 'cleanup' },
-  { key: 'roadmap',   label: 'Roadmap',   icon: '🗺', section: 'system' },
-  { key: 'ai-queue',  label: 'AI Queue',  icon: '🤖', section: 'system' },
+  { key: 'projects',  label: 'Projects',  icon: '📁', section: 'organise' },
+  { key: 'reference', label: 'Reference', icon: '📚', section: 'organise' },
+  { key: 'logbook',   label: 'Logbook',   icon: '✓',  section: 'archive' },
 ];
 
 export const SECTION_LABELS: Record<SidebarSection, string> = {
-  capture: 'CAPTURE',
-  actions: 'ACTIONS',
-  reference: 'REFERENCE',
-  cleanup: 'CLEANUP',
-  system: 'SYSTEM',
+  collect:  'COLLECT',
+  actions:  'ACTIONS',
+  organise: 'ORGANISE',
+  archive:  'ARCHIVE',
 };
 
 export const TYPE_COLOURS: Record<ItemType, { bg: string; text: string }> = {
@@ -107,7 +96,7 @@ export const AREA_COLOURS: Record<string, { bg: string; text: string }> = {
 };
 
 export const ITEM_TYPES: ItemType[] = ['task', 'people', 'project', 'idea', 'admin', 'area'];
-export const ITEM_STATUSES: ItemStatus[] = ['inbox', 'next', 'focus', 'waiting', 'scheduled', 'someday'];
+export const ITEM_STATUSES: ItemStatus[] = ['inbox', 'next', 'focus', 'waiting', 'scheduled', 'someday', 'reference'];
 export const AREAS = ['property', 'finance', 'business', 'personal'];
 
 // ── Command Bar Types ─────────────────────────────────────

@@ -4,6 +4,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Item, ItemType, ItemStatus, NextAction, TYPE_COLOURS, AREA_COLOURS, ITEM_TYPES, ITEM_STATUSES, AREAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 
+const EXEC_LABELS: Record<string, string> = {
+  pending: '⏳ Pending',
+  claimed: '🔄 Running',
+  done: '✅ Done',
+  dry_run_complete: '🧪 Dry Run',
+  needs_human: '🚨 Needs Human',
+};
+
 interface ItemCardProps {
   item: Item;
   onUpdate: () => void;
@@ -154,6 +162,11 @@ export default function ItemCard({ item, onUpdate, isInbox, dragHandleProps, onS
         )}
 
         <span className="type-pill" style={{ background: typeColour.bg, color: typeColour.text }}>{item.type}</span>
+        {item.doer === 'ai' && item.execution_status && (
+          <span className={`exec-badge exec-badge-${item.execution_status}`}>
+            {EXEC_LABELS[item.execution_status]}
+          </span>
+        )}
 
         <button
           className={`item-action-btn ${item.status === 'focus' ? 'item-action-active' : ''}`}
